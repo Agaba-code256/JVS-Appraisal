@@ -1,13 +1,11 @@
-import Users from "./Users";
+import Contactcard from "./contactCard";
 import Navbar from "../navbar";
-import Stats from "./stats";
 
-const Layout = () => {
+const Dashboard = () => {
   return (
     <div className="relative bg-white">
       <Navbar />
-      <Stats />
-      <Users />
+      <Contactcard />
 
       {/* Adding green cloud-like spots */}
       <div className="absolute top-0 left-0 w-48 h-48 bg-green-200 rounded-full opacity-20 transform translate-x-20 translate-y-20"></div>
@@ -21,4 +19,4 @@ const Layout = () => {
   );
 };
 
-export default Layout;
+export default Dashboard;
