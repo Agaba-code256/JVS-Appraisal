@@ -1,9 +1,27 @@
-import React from "react";
-import logo from "../images/Logo.png"; // Make sure this path is correct
+import React, { useState } from "react";
+import logo from "../images/Logo.png";
+import { doSignInWithEmailAndPassword } from "@/firebase/auth";
+import { useAuth } from "@/contexts/authContext";
 
 export default function Login() {
+  const { userLoggedIn } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!isSigningIn) {
+      setIsSigningIn(true);
+      await doSignInWithEmailAndPassword(email, password);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      {userLoggedIn && <Navigate to={"/home"} replace={true} />}
       <div className="mx-auto max-w-sm p-6 bg-white shadow-md rounded-lg">
         <div className="space-y-1 text-center">
           <img src={logo} alt="Logo" className="mx-auto h-12 w-24" />

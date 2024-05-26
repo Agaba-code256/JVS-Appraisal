@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { database } from "../../firebase/firebase"; // Adjust the import path as needed
+import { ref, push, set } from "firebase/database";
 
 const attributes = [
   {
@@ -56,8 +58,26 @@ export default function TestTable() {
   }, [selectedValues]);
 
   const handleSubmit = () => {
-    // Implement submit functionality here
-    console.log("Form submitted with values:", selectedValues);
+    const supervisorAppraisalRef = ref(database, "SupervisorAppraisal");
+    const newDataRef = push(supervisorAppraisalRef);
+
+    const dataToSave = {
+      attributes: attributes.map((attribute, index) => ({
+        title: attribute.title,
+        description: attribute.description,
+        performanceLevel: selectedValues[index],
+        improvementPlan: "", // Add the improvement plan here if needed
+      })),
+      overallValue: calculateOverallValue(),
+    };
+
+    set(newDataRef, dataToSave)
+      .then(() => {
+        console.log("Data saved successfully!");
+      })
+      .catch((error) => {
+        console.error("Error saving data:", error);
+      });
   };
 
   return (

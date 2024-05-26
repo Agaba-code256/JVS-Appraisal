@@ -3,6 +3,7 @@ import Adduser from "./components/admin/addUser";
 import Layout from "./components/admin/layout";
 import Login from "./components/auth/login";
 import ENavbar from "./components/employee/employeeNavbar";
+import ImageStore from "./components/employee/imageUpload";
 import Register from "./components/employee/register";
 import Technical from "./components/employee/technical";
 import Contactcard from "./components/supervisor/contactCard";
@@ -13,7 +14,7 @@ import TestTable from "./components/supervisor/testTable";
 function App() {
   return (
     <div>
-      <ENavbar />;
+      <ImageStore />;
     </div>
   );
 }
