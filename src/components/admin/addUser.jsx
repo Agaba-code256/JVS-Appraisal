@@ -1,18 +1,87 @@
-import React from "react";
+import React, { useState } from "react";
+import { ref, getDownloadURL, uploadBytes } from "firebase/storage";
+import { ref as dbRef, set } from "firebase/database";
+import { v4 } from "uuid";
+import { imgDB, database } from "../../firebase/firebase"; // Adjust the import path as needed
 import placeholder from "../images/placeholder.png";
 
 export default function Adduser() {
+  const [surname, setSurname] = useState("");
+  const [givenName, setGivenName] = useState("");
+  const [contact, setContact] = useState("");
+  const [email, setEmail] = useState("");
+  const [personnelType, setPersonnelType] = useState("");
+  const [imgURL, setImgURL] = useState("");
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setUploading(true);
+      const imgRef = ref(imgDB, `Imgs/${v4()}`);
+      uploadBytes(imgRef, selectedFile)
+        .then((snapshot) => {
+          getDownloadURL(snapshot.ref).then((url) => {
+            setImgURL(url);
+            console.log("File URL:", url);
+            setUploading(false);
+          });
+        })
+        .catch((error) => {
+          console.error("Error uploading file: ", error);
+          setUploading(false);
+        });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (surname && givenName && contact && email && personnelType && imgURL) {
+      setSubmitting(true);
+      const userId = v4();
+      set(dbRef(database, `users/${userId}`), {
+        surname,
+        givenName,
+        contact,
+        email,
+        personnelType,
+        imageUrl: imgURL,
+      })
+        .then(() => {
+          console.log("Data saved successfully!");
+          // Reset form
+          setSurname("");
+          setGivenName("");
+          setContact("");
+          setEmail("");
+          setPersonnelType("");
+          setImgURL("");
+          setFile(null);
+          setSubmitting(false);
+        })
+        .catch((error) => {
+          console.error("Error saving data: ", error);
+          setSubmitting(false);
+        });
+    } else {
+      alert("Please fill out all fields and upload an image.");
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-[500px] bg-white shadow-md rounded-lg overflow-hidden">
+    <div className="flex items-center justify-center min-h-screen bg-white-100 ">
+      <div className="border-none w-[700px] bg-white">
         <div className="p-6">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold">Create user account</h2>
+            <h2 className="text-xl font-semibold">User Details</h2>
             <p className="text-sm text-gray-600">
-              Image uploads must be in png format.
+              Make sure emails match above and below.
             </p>
           </div>
-          <form>
+          <form onSubmit={handleSubmit}>
             <div className="grid w-full items-center gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-1.5">
@@ -24,6 +93,8 @@ export default function Adduser() {
                   </label>
                   <input
                     id="surname"
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
                     placeholder="Enter your surname"
                     className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                   />
@@ -37,6 +108,8 @@ export default function Adduser() {
                   </label>
                   <input
                     id="givenName"
+                    value={givenName}
+                    onChange={(e) => setGivenName(e.target.value)}
                     placeholder="Enter your given name"
                     className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                   />
@@ -52,6 +125,8 @@ export default function Adduser() {
                   </label>
                   <input
                     id="contact"
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
                     placeholder="Enter your contact number"
                     className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                   />
@@ -65,6 +140,8 @@ export default function Adduser() {
                   </label>
                   <input
                     id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     type="email"
                     className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
@@ -80,15 +157,17 @@ export default function Adduser() {
                 </label>
                 <select
                   id="personnelType"
+                  value={personnelType}
+                  onChange={(e) => setPersonnelType(e.target.value)}
                   className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                 >
-                  <option value="" disabled selected>
+                  <option value="" disabled>
                     Select personnel type
                   </option>
-                  <option value="manager">Manager</option>
+                  <option value="manager">Executive</option>
                   <option value="employee">Employee</option>
-                  <option value="contractor">Contractor</option>
-                  <option value="intern">Intern</option>
+                  <option value="contractor">Supervisor</option>
+                  <option value="intern">Administrator</option>
                 </select>
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -101,6 +180,7 @@ export default function Adduser() {
                 <input
                   id="file"
                   type="file"
+                  onChange={handleFileChange}
                   className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
                 <div className="mt-2">
@@ -108,32 +188,41 @@ export default function Adduser() {
                     alt="Uploaded file preview"
                     className="rounded-md object-cover"
                     height={100}
-                    src={placeholder}
+                    src={imgURL || placeholder}
                     style={{ aspectRatio: "100/100", objectFit: "cover" }}
                     width={100}
                   />
                 </div>
               </div>
             </div>
+            <div className="flex justify-between p-6 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => {
+                  // Reset form
+                  setSurname("");
+                  setGivenName("");
+                  setContact("");
+                  setEmail("");
+                  setPersonnelType("");
+                  setImgURL("");
+                  setFile(null);
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-gray-800 text-white rounded-md"
+                disabled={uploading || submitting}
+              >
+                {submitting ? "Submitting..." : "Create"}
+              </button>
+            </div>
           </form>
         </div>
-        <div className="flex justify-between p-6 border-t border-gray-200">
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition">
-            Cancel
-          </button>
-          <button className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">
-            Create
-          </button>
-        </div>
       </div>
-
-      <div className="absolute top-0 left-0 w-48 h-48 bg-green-200 rounded-full opacity-20 transform translate-x-20 translate-y-20"></div>
-      <div className="absolute top-10 left-10 w-32 h-32 bg-green-300 rounded-full opacity-20 transform translate-x-24 translate-y-24"></div>
-      <div className="absolute top-20 left-20 w-40 h-40 bg-green-100 rounded-full opacity-20 transform translate-x-28 translate-y-28"></div>
-
-      <div className="absolute bottom-0 right-0 w-40 h-40 bg-green-200 rounded-full opacity-20 transform -translate-x-20 -translate-y-20"></div>
-      <div className="absolute bottom-10 right-10 w-32 h-32 bg-green-300 rounded-full opacity-20 transform -translate-x-24 -translate-y-24"></div>
-      <div className="absolute bottom-20 right-20 w-48 h-48 bg-green-100 rounded-full opacity-20 transform -translate-x-28 -translate-y-28"></div>
     </div>
   );
 }

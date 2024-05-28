@@ -16,8 +16,7 @@ import { ref, set } from "firebase/database";
 
 export default function Component() {
   const [formData, setFormData] = useState({
-    surname: "",
-    givenNames: "",
+    email: "",
     dateOfBirth: "",
     personnelType: "",
     firstAppointmentText: "",
@@ -66,7 +65,7 @@ export default function Component() {
     setAlert({ type: "", message: "" });
 
     try {
-      const newEmployeeRef = ref(database, "employees/" + formData.surname);
+      const newEmployeeRef = ref(database, "users/" + formData.surname);
       await set(newEmployeeRef, formData);
       setLoading(false);
       setAlert({ type: "success", message: "Data saved successfully!" });
@@ -98,7 +97,7 @@ export default function Component() {
         </div>
       )}
       <form className="space-y-6" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-2 gap-6">
+        {/* <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="surname">Surname</Label>
             <Input
@@ -114,6 +113,17 @@ export default function Component() {
               id="givenNames"
               placeholder="Enter your given names"
               value={formData.givenNames}
+              onChange={handleChange}
+            />
+          </div>
+        </div> */}
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              placeholder="example@gmail.com"
+              value={formData.email}
               onChange={handleChange}
             />
           </div>
@@ -263,7 +273,7 @@ export default function Component() {
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-6">
+        {/* <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="profile-picture">Profile Picture</Label>
             <div className="flex items-center gap-4">
@@ -285,7 +295,7 @@ export default function Component() {
               />
             </div>
           </div>
-        </div>
+        </div> */}
         <div className="flex justify-end">
           <Button type="submit">
             {loading ? "Saving..." : "Save Changes"}

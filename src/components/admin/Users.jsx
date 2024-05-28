@@ -1,55 +1,204 @@
+import { useState, useEffect } from "react";
 import {
-  SelectValue,
-  SelectTrigger,
-  SelectItem,
-  SelectGroup,
-  SelectContent,
-  Select,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { AvatarImage, AvatarFallback, Avatar } from "@/components/ui/avatar";
-import {
-  PaginationPrevious,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationContent,
-  Pagination,
-} from "@/components/ui/pagination";
+  database,
+  ref,
+  onValue,
+  off,
+  remove,
+  update,
+} from "../../firebase/firebase";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import Create from "./create";
 
 export default function Users() {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <Select>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by personnel type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="developer">Developer</SelectItem>
-                <SelectItem value="designer">Designer</SelectItem>
-                <SelectItem value="intern">Intern</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-green-500 hover:bg-green-600 text-white">
-            Add User
+  const [users, setUsers] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
+
+  useEffect(() => {
+    const usersRef = ref(database, "users");
+
+    const fetchData = async () => {
+      try {
+        onValue(usersRef, (snapshot) => {
+          const usersData = snapshot.val();
+          if (usersData) {
+            const usersArray = Object.keys(usersData).map((key) => ({
+              id: key,
+              ...usersData[key],
+            }));
+            setUsers(usersArray);
+          } else {
+            setUsers([]);
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      off(usersRef);
+    };
+  }, []);
+
+  const handleEdit = (user) => {
+    setCurrentUser(user);
+    setIsEditing(true);
+  };
+
+  const handleDelete = async (userId) => {
+    try {
+      const userRef = ref(database, `users/${userId}`);
+      await remove(userRef);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
+
+  const handleUpdate = async (event) => {
+    event.preventDefault();
+    const { givenName, surname, email, contact, personnelType } =
+      event.target.elements;
+    const updatedUser = {
+      givenName: givenName.value,
+      surname: surname.value,
+      email: email.value,
+      contact: contact.value,
+      personnelType: personnelType.value,
+    };
+
+    try {
+      const userRef = ref(database, `users/${currentUser.id}`);
+      await update(userRef, updatedUser);
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === currentUser.id ? { id: user.id, ...updatedUser } : user
+        )
+      );
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
+  };
+
+  if (isCreating) {
+    return <Create onClose={() => setIsCreating(false)} />;
+  }
+
+  if (isEditing && currentUser) {
+    return (
+      <form onSubmit={handleUpdate}>
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+            htmlFor="givenName"
+          >
+            Given Name
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+            id="givenName"
+            type="text"
+            defaultValue={currentUser.givenName}
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+            htmlFor="surname"
+          >
+            Surname
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+            id="surname"
+            type="text"
+            defaultValue={currentUser.surname}
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+            htmlFor="email"
+          >
+            Email
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+            id="email"
+            type="email"
+            defaultValue={currentUser.email}
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+            htmlFor="contact"
+          >
+            Contact
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+            id="contact"
+            type="text"
+            defaultValue={currentUser.contact}
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+            htmlFor="personnelType"
+          >
+            Personnel Type
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+            id="personnelType"
+            type="text"
+            defaultValue={currentUser.personnelType}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            type="submit"
+          >
+            Save
+          </button>
+          <button
+            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            onClick={() => setIsEditing(false)}
+          >
+            Cancel
           </button>
         </div>
-      </div>
+      </form>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
       <div className="bg-white dark:bg-gray-950 rounded-lg shadow-lg overflow-hidden">
+        <div className="flex justify-end p-4">
+          <button
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            onClick={() => setIsCreating(true)}
+          >
+            Create Account
+          </button>
+        </div>
         <table className="w-full table-auto">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-800">
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
                 Avatar
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
-                ID
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
                 Name
@@ -64,211 +213,55 @@ export default function Users() {
                 Personnel Type
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
-                Edit
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
-                Delete
+                Actions
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-200 dark:border-gray-800">
-              <td className="px-6 py-4">
-                <Avatar>
-                  <AvatarImage alt="Avatar" src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-              </td>
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-50">
-                #001
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                John Doe
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                john.doe@example.com
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                +1 (555) 123-4567
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                Manager
-              </td>
-              <td className="px-6 py-4">
-                <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-500 hover:bg-blue-600 text-white">
-                  <PencilIcon className="w-4 h-4" />
-                </button>
-              </td>
-              <td className="px-6 py-4">
-                <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-500 hover:bg-red-600 text-white">
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </td>
-            </tr>
-            <tr className="border-b border-gray-200 dark:border-gray-800">
-              <td className="px-6 py-4">
-                <Avatar>
-                  <AvatarImage alt="Avatar" src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-              </td>
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-50">
-                #002
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                Jane Doe
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                jane.doe@example.com
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                +1 (555) 987-6543
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                Developer
-              </td>
-              <td className="px-6 py-4">
-                <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-500 hover:bg-blue-600 text-white">
-                  <PencilIcon className="w-4 h-4" />
-                </button>
-              </td>
-              <td className="px-6 py-4">
-                <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-500 hover:bg-red-600 text-white">
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </td>
-            </tr>
-            <tr className="border-b border-gray-200 dark:border-gray-800">
-              <td className="px-6 py-4">
-                <Avatar>
-                  <AvatarImage alt="Avatar" src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-              </td>
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-50">
-                #003
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                Bob Smith
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                bob.smith@example.com
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                +1 (555) 555-5555
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                Designer
-              </td>
-              <td className="px-6 py-4">
-                <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-500 hover:bg-blue-600 text-white">
-                  <PencilIcon className="w-4 h-4" />
-                </button>
-              </td>
-              <td className="px-6 py-4">
-                <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-500 hover:bg-red-600 text-white">
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </td>
-            </tr>
-            <tr className="border-b border-gray-200 dark:border-gray-800">
-              <td className="px-6 py-4">
-                <Avatar>
-                  <AvatarImage alt="Avatar" src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-              </td>
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-50">
-                #004
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                Sarah Lee
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                sarah.lee@example.com
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                +1 (555) 123-4567
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
-                Intern
-              </td>
-              <td className="px-6 py-4">
-                <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-500 hover:bg-blue-600 text-white">
-                  <PencilIcon className="w-4 h-4" />
-                </button>
-              </td>
-              <td className="px-6 py-4">
-                <button className="px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-500 hover:bg-red-600 text-white">
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </td>
-            </tr>
+            {users.map((user) => (
+              <tr
+                key={user.id}
+                className="border-b border-gray-200 dark:border-gray-800"
+              >
+                <td className="px-6 py-4">
+                  <Avatar>
+                    <AvatarImage alt="Avatar" src={user.imageUrl} />
+                    <AvatarFallback>
+                      {user.givenName[0] + user.surname[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
+                  {user.givenName} {user.surname}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
+                  {user.email}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
+                  {user.contact}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
+                  {user.personnelType}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50 flex space-x-2">
+                  <button
+                    onClick={() => handleEdit(user)}
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(user.id)}
+                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    <FontAwesomeIcon icon={faTrashAlt} />
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-      <div className="flex justify-center mt-6">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
     </div>
-  );
-}
-
-function PencilIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-      <path d="m15 5 4 4" />
-    </svg>
-  );
-}
-
-function TrashIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
   );
 }

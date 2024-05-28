@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { imgDB } from "../../firebase/firebase";
+import React, { useState } from "react";
+import { imgDB, database } from "../../firebase/firebase"; // Import db from firebase setup
 import { v4 } from "uuid";
 import { ref, getDownloadURL, uploadBytes } from "firebase/storage";
+import { ref as dbRef, set } from "firebase/database"; // Import required functions for Realtime Database
 
 const ImageStore = () => {
   const [txt, setTxt] = useState("");
@@ -21,9 +22,34 @@ const ImageStore = () => {
     });
   };
 
+  const handleSubmit = () => {
+    if (txt && imgURL) {
+      const itemId = v4(); // Generate a unique ID for each item
+      set(dbRef(database, `images/${itemId}`), {
+        text: txt,
+        imageUrl: imgURL,
+      })
+        .then(() => {
+          console.log("Data saved successfully!");
+          setTxt(""); // Clear the text input
+          setImgURL(""); // Clear the image URL
+        })
+        .catch((error) => {
+          console.error("Error saving data: ", error);
+        });
+    } else {
+      alert("Please upload an image and enter some text.");
+    }
+  };
+
   return (
     <div>
-      <input type="text" onChange={(e) => setTxt(e.target.value)} />
+      <input
+        type="text"
+        value={txt}
+        onChange={(e) => setTxt(e.target.value)}
+        placeholder="Enter some text"
+      />
       <input type="file" onChange={handleUpload} />
       {imgURL && (
         <div>
@@ -31,6 +57,7 @@ const ImageStore = () => {
           <img src={imgURL} alt="Uploaded" />
         </div>
       )}
+      <button onClick={handleSubmit}>Submit</button>
     </div>
   );
 };

@@ -51,79 +51,85 @@ export default function Register() {
   };
 
   return (
-    <Card className="mx-auto max-w-sm">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Register</CardTitle>
-        <CardDescription>Create your account to get started.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {message && (
-          <div className="mb-4 text-green-500 bg-green-100 p-2 rounded">
-            {message}
-          </div>
-        )}
-        {error && (
-          <div className="mb-4 text-red-500 bg-red-100 p-2 rounded">
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              placeholder="m@example.com"
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="focus:ring-2 focus:ring-green-500"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                id="password"
-                required
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="focus:ring-2 focus:ring-green-500"
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      className="h-9 w-9"
-                      size="icon"
-                      variant="ghost"
-                      type="button"
-                      onClick={generatePassword}
-                    >
-                      <KeyIcon className="h-5 w-5" />
-                      <span className="sr-only">Generate password</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Generate a secure password</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+    <div className="p-5">
+      <Card className="mx-auto max-w-lg border-none">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Register</CardTitle>
+          <CardDescription>
+            Create user account and fill in user details.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {message && (
+            <div className="mb-4 text-green-500 bg-green-100 p-2 rounded">
+              {message}
             </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <Button
-              className="flex-1 bg-green-500 hover:bg-green-600"
-              type="submit"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating Account..." : "Create Account"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          )}
+          {error && (
+            <div className="mb-4 text-red-500 bg-red-100 p-2 rounded">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex space-x-2">
+              <div className="flex-1">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  placeholder="m@example.com"
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id="password"
+                    required
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full focus:ring-2 focus:ring-green-500"
+                  />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className="h-9 w-9"
+                          size="icon"
+                          variant="ghost"
+                          type="button"
+                          onClick={generatePassword}
+                        >
+                          <KeyIcon className="h-5 w-5" />
+                          <span className="sr-only">Generate password</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Generate a secure password</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <Button
+                className="w-full bg-gray-800"
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
