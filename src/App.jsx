@@ -12,11 +12,12 @@ import SupeTable from "./components/supervisor/table";
 import TestTable from "./components/supervisor/testTable";
 import Register from "./components/employee/register";
 import Users from "./components/admin/Users";
+import Edashboard from "./components/employee/employeeDashboard";
 
 function App() {
   return (
     <div>
-      <Layout />;
+      <Technical />;
     </div>
   );
 }

@@ -13,9 +13,9 @@ import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import logo from "../images/Logo.png";
 
 const navigation = [
-  { name: "Appraisal", href: "#", current: true },
-  { name: "Personal Data", href: "#", current: false },
-  { name: "Technicalities", href: "#", current: false },
+  { name: "Technicalities", href: "#", current: true },
+  { name: "Growth", href: "#", current: false },
+  { name: "Bio Data", href: "#", current: false },
 ];
 
 function classNames(...classes) {

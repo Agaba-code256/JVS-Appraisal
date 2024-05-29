@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TableHead,
   TableRow,
@@ -9,28 +9,67 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  database,
+  ref,
+  onValue,
+  remove,
+  update,
+} from "../../firebase/firebase";
+import { push, child } from "firebase/database";
 
 export default function Technical() {
-  const [courses, setCourses] = useState([
-    {
-      name: "Web Development",
-      duration: "6 months",
-      institution: "Acme University",
-    },
-  ]);
+  const [courses, setCourses] = useState([]);
 
-  const addRow = () => {
-    setCourses([...courses, { name: "", duration: "", institution: "" }]);
+  useEffect(() => {
+    const fetchData = async () => {
+      const coursesRef = ref(database, "Growth");
+      onValue(coursesRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const coursesArray = Object.keys(data).map((key) => ({
+            id: key,
+            ...data[key],
+          }));
+          setCourses(coursesArray);
+        }
+      });
+
+      // Cleanup subscription on unmount
+      return () => off(coursesRef);
+    };
+
+    fetchData();
+  }, []);
+
+  const addRow = async () => {
+    const newCourse = { name: "", duration: "", institution: "" };
+    const newCourseRef = push(child(ref(database), "Growth"));
+    await update(newCourseRef, newCourse);
+    setCourses([...courses, { ...newCourse, id: newCourseRef.key }]);
   };
 
-  const removeRow = (index) => {
+  const removeRow = async (index) => {
+    const courseToDelete = courses[index];
+    await remove(ref(database, `Growth/${courseToDelete.id}`));
     setCourses(courses.filter((_, i) => i !== index));
   };
 
-  const handleInputChange = (value, index, field) => {
+  const handleInputChange = async (value, index, field) => {
     const updatedCourses = [...courses];
     updatedCourses[index][field] = value;
     setCourses(updatedCourses);
+    await update(ref(database, `Growth/${updatedCourses[index].id}`), {
+      [field]: value,
+    });
+  };
+
+  const saveCourses = async () => {
+    const updates = {};
+    courses.forEach((course) => {
+      updates[`Growth/${course.id}`] = course;
+    });
+    await update(ref(database), updates);
   };
 
   return (
@@ -48,7 +87,7 @@ export default function Technical() {
             </TableHeader>
             <TableBody>
               {courses.map((course, index) => (
-                <TableRow key={index}>
+                <TableRow key={course.id}>
                   <TableCell>
                     <Input
                       value={course.name}
@@ -78,6 +117,7 @@ export default function Technical() {
                       size="icon"
                       variant="outline"
                       className="bg-blue-500 text-white"
+                      // Add any desired edit functionality here
                     >
                       <PencilIcon className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
@@ -99,7 +139,11 @@ export default function Technical() {
         </div>
       </div>
       <div className="flex justify-center mt-4 gap-2">
-        <Button variant="outline" className="hover:bg-green-500 text-black">
+        <Button
+          variant="outline"
+          className="hover:bg-green-500 text-black"
+          onClick={saveCourses}
+        >
           Save
         </Button>
         <Button

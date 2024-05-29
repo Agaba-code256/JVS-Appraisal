@@ -6,7 +6,7 @@ import Adduser from "./addUser";
 const Create = () => {
   return (
     <div className="relative bg-white">
-      <Navbar />
+      {/* <Navbar /> */}
       <Register />
       <Adduser />
     </div>

@@ -1,5 +1,11 @@
+import ENavbar from "./employeeNavbar";
+
 const Edashboard = () => {
-  return <div></div>;
+  return (
+    <div>
+      <ENavbar />
+    </div>
+  );
 };
 
 export default Edashboard;
