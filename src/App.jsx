@@ -1,24 +1,33 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard2 from "./components/HR/HRDashboard";
-import Adduser from "./components/admin/addUser";
 import Layout from "./components/admin/layout";
 import Login from "./components/auth/login";
-import ENavbar from "./components/employee/employeeNavbar";
-import ImageStore from "./components/employee/imageUpload";
-import Technical from "./components/employee/technical";
-import Contactcard from "./components/supervisor/contactCard";
 import Dashboard from "./components/supervisor/dashboard";
-import SupeTable from "./components/supervisor/table";
-import TestTable from "./components/supervisor/testTable";
-import Register from "./components/employee/register";
-import Users from "./components/admin/Users";
 import Edashboard from "./components/employee/employeeDashboard";
+import AppraisalList from "./components/HR/appraisalList";
+import AppraisalDisplay from "./components/HR/supervisorAppraisal";
+import AppraisalPage from "./components/HR/appraisePage";
+import UploadPdf from "./components/employee/pdfUpload";
+import Pdf from "./components/employee/pdfComponent";
+import Technical from "./components/employee/technical";
+import { AuthProvider } from "./contexts/authContext";
 
 function App() {
   return (
-    <div>
-      <Technical />;
-    </div>
+    // <div>
+    //   <Technical />
+    // </div>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/admin" element={<Layout />} />
+        <Route path="/employee/*" element={<Edashboard />} />
+        <Route path="/supervisor" element={<Dashboard />} />
+        <Route path="/HR" element={<Dashboard2 />} />
+        <Route path="/appraisal/:email" element={<AppraisalPage />} />
+      </Routes>
+    </AuthProvider>
   );
 }
 

@@ -64,7 +64,7 @@ export default function Users() {
 
   const handleUpdate = async (event) => {
     event.preventDefault();
-    const { givenName, surname, email, contact, personnelType } =
+    const { givenName, surname, email, contact, personnelType, salary } =
       event.target.elements;
     const updatedUser = {
       givenName: givenName.value,
@@ -72,6 +72,7 @@ export default function Users() {
       email: email.value,
       contact: contact.value,
       personnelType: personnelType.value,
+      salary: salary.value,
     };
 
     try {
@@ -165,6 +166,20 @@ export default function Users() {
             defaultValue={currentUser.personnelType}
           />
         </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+            htmlFor="salary"
+          >
+            Salary
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+            id="salary"
+            type="text"
+            defaultValue={currentUser.salary}
+          />
+        </div>
         <div className="flex items-center justify-between">
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -213,6 +228,9 @@ export default function Users() {
                 Personnel Type
               </th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
+                Salary
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
                 Actions
               </th>
             </tr>
@@ -242,6 +260,9 @@ export default function Users() {
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
                   {user.personnelType}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
+                  {user.salary}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50 flex space-x-2">
                   <button

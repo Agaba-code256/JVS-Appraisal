@@ -30,7 +30,7 @@ export default function Navbar() {
                 <div className="flex flex-shrink-0 items-center">
                   <img src={logo} alt="Logo" className="mx-auto h-12 w-24" />
                 </div>
-                <div className="hidden sm:ml-6 sm:block flex-grow">
+                {/* <div className="hidden sm:ml-6 sm:block flex-grow">
                   <div className="flex justify-center items-center h-full">
                     <input
                       type="text"
@@ -38,7 +38,7 @@ export default function Navbar() {
                       className="block w-full max-w-md rounded-md bg-gray-100 px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                 <button

@@ -3,10 +3,10 @@ import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link, Routes, Route, useLocation } from "react-router-dom";
 import logo from "../images/Logo.png";
-import Appraisal from "./appraisal";
-import Performance from "./performance";
-import Technical from "./technical";
-import PersonalData from "./personalData";
+// import Appraisal from "./appraisal";
+// import Performance from "./performance";
+// import Technical from "./technical";
+// import PersonalData from "./personalData";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   getDatabase,
@@ -16,24 +16,24 @@ import {
   equalTo,
   get,
 } from "firebase/database";
-import Profile from "./employeeProfile"; // Assuming Profile component is in the same folder
+import Profile from "./adminProfile"; // Assuming Profile component is in the same folder
 
 const navigation = [
-  { name: "Personal Data", href: "personaldata" },
-  { name: "Growth", href: "growth" },
-  { name: "Appraisal", href: "appraisal" },
-  { name: "Performance", href: "performance" },
+  //   { name: "Personal Data", href: "personaldata" },
+  //   { name: "Growth", href: "growth" },
+  //   { name: "Appraisal", href: "appraisal" },
+  //   { name: "Performance", href: "performance" },
 ];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function ENavbar() {
+export default function ANavbar() {
   const location = useLocation();
-  const [activeItem, setActiveItem] = useState(
-    location.pathname.split("/").pop()
-  );
+  //   const [activeItem, setActiveItem] = useState(
+  //     location.pathname.split("/").pop()
+  //   );
   const [userProfile, setUserProfile] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -67,9 +67,9 @@ export default function ENavbar() {
     });
   }, []);
 
-  const handleItemClick = (href) => {
-    setActiveItem(href);
-  };
+  //   const handleItemClick = (href) => {
+  //     setActiveItem(href);
+  //   };
 
   const toggleProfileModal = () => {
     setIsProfileOpen(!isProfileOpen);
@@ -232,12 +232,12 @@ export default function ENavbar() {
       )}
 
       {/* Routes */}
-      <Routes>
+      {/* <Routes>
         <Route path="personaldata" element={<PersonalData />} />
         <Route path="growth" element={<Technical />} />
         <Route path="appraisal" element={<Appraisal />} />
         <Route path="performance" element={<Performance />} />
-      </Routes>
+      </Routes> */}
     </div>
   );
 }

@@ -8,7 +8,12 @@ import {
   remove,
   update,
 } from "firebase/database";
-import { getStorage } from "firebase/storage";
+import {
+  getStorage,
+  uploadBytes,
+  getDownloadURL,
+  ref as storageRef,
+} from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBPd9bKjRquGlgOySns3xN7L7EtzI3kJDU",
@@ -26,4 +31,17 @@ const auth = getAuth(app);
 const database = getDatabase(app);
 const imgDB = getStorage(app);
 
-export { app, auth, database, imgDB, ref, onValue, off, remove, update };
+export {
+  app,
+  auth,
+  database,
+  imgDB,
+  ref,
+  onValue,
+  off,
+  remove,
+  update,
+  uploadBytes,
+  getDownloadURL,
+  storageRef,
+};

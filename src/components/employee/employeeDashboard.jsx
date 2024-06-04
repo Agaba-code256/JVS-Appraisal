@@ -1,11 +1,14 @@
+import React from "react";
+import { Outlet } from "react-router-dom";
 import ENavbar from "./employeeNavbar";
 
-const Edashboard = () => {
+export default function Edashboard() {
   return (
-    <div>
+    <div className="bg-white">
       <ENavbar />
+      <div className="p-4">
+        <Outlet />
+      </div>
     </div>
   );
-};
-
-export default Edashboard;
+}

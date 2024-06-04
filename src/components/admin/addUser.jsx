@@ -11,6 +11,7 @@ export default function Adduser() {
   const [contact, setContact] = useState("");
   const [email, setEmail] = useState("");
   const [personnelType, setPersonnelType] = useState("");
+  const [salary, setSalary] = useState("");
   const [imgURL, setImgURL] = useState("");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -39,7 +40,15 @@ export default function Adduser() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (surname && givenName && contact && email && personnelType && imgURL) {
+    if (
+      surname &&
+      givenName &&
+      contact &&
+      email &&
+      personnelType &&
+      salary &&
+      imgURL
+    ) {
       setSubmitting(true);
       const userId = v4();
       set(dbRef(database, `users/${userId}`), {
@@ -48,6 +57,7 @@ export default function Adduser() {
         contact,
         email,
         personnelType,
+        salary,
         imageUrl: imgURL,
       })
         .then(() => {
@@ -58,9 +68,12 @@ export default function Adduser() {
           setContact("");
           setEmail("");
           setPersonnelType("");
+          setSalary("");
           setImgURL("");
           setFile(null);
           setSubmitting(false);
+          // Refresh the page
+          window.location.reload();
         })
         .catch((error) => {
           console.error("Error saving data: ", error);
@@ -133,13 +146,13 @@ export default function Adduser() {
                 </div>
                 <div className="flex flex-col space-y-1.5">
                   <label
-                    htmlFor="email"
+                    htmlFor="Email"
                     className="text-sm font-medium text-gray-700"
                   >
                     Email
                   </label>
                   <input
-                    id="email"
+                    id="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
@@ -148,27 +161,44 @@ export default function Adduser() {
                   />
                 </div>
               </div>
-              <div className="flex flex-col space-y-1.5">
-                <label
-                  htmlFor="personnelType"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Personnel type
-                </label>
-                <select
-                  id="personnelType"
-                  value={personnelType}
-                  onChange={(e) => setPersonnelType(e.target.value)}
-                  className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="" disabled>
-                    Select personnel type
-                  </option>
-                  <option value="manager">Executive</option>
-                  <option value="employee">Employee</option>
-                  <option value="contractor">Supervisor</option>
-                  <option value="intern">Administrator</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <label
+                    htmlFor="personnelType"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Personnel type
+                  </label>
+                  <select
+                    id="personnelType"
+                    value={personnelType}
+                    onChange={(e) => setPersonnelType(e.target.value)}
+                    className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="" disabled>
+                      Select personnel type
+                    </option>
+                    <option value="executive">Executive</option>
+                    <option value="employee">Employee</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="administrator">Administrator</option>
+                  </select>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <label
+                    htmlFor="salary"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Salary
+                  </label>
+                  <input
+                    id="salary"
+                    value={salary}
+                    onChange={(e) => setSalary(e.target.value)}
+                    placeholder="Enter personnel salary"
+                    className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
               </div>
               <div className="flex flex-col space-y-1.5">
                 <label

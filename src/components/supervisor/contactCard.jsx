@@ -104,10 +104,12 @@ export default function ContactCardList() {
         onValue(usersRef, (snapshot) => {
           const usersData = snapshot.val();
           if (usersData) {
-            const usersArray = Object.keys(usersData).map((key) => ({
-              id: key,
-              ...usersData[key],
-            }));
+            const usersArray = Object.keys(usersData)
+              .map((key) => ({
+                id: key,
+                ...usersData[key],
+              }))
+              .filter((user) => user.personnelType === "employee"); // Filter users based on personnelType
             setUsers(usersArray);
           } else {
             setUsers([]);

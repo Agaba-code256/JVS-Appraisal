@@ -1,10 +1,10 @@
-import Navbar from "../navbar";
 import Users from "./Users";
+import ANavbar from "./adminNavbar";
 
 const Layout = () => {
   return (
     <div className="relative bg-white">
-      <Navbar />
+      <ANavbar />
       <Users />
     </div>
   );

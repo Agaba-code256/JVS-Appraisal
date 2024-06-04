@@ -11,71 +11,140 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   database,
-  ref,
+  ref as dbRef,
   onValue,
+  off,
   remove,
   update,
+  imgDB,
+  uploadBytes,
+  getDownloadURL,
+  storageRef as storageRef,
 } from "../../firebase/firebase";
 import { push, child } from "firebase/database";
+import { getAuth } from "firebase/auth";
 
 export default function Technical() {
   const [courses, setCourses] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const coursesRef = ref(database, "Growth");
-      onValue(coursesRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const coursesArray = Object.keys(data).map((key) => ({
-            id: key,
-            ...data[key],
-          }));
-          setCourses(coursesArray);
-        }
-      });
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
 
-      // Cleanup subscription on unmount
-      return () => off(coursesRef);
+      if (currentUser) {
+        const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+        const coursesRef = dbRef(database, `Growth-${decodedEmail}`);
+        onValue(coursesRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const coursesArray = Object.keys(data).map((key) => ({
+              id: key,
+              ...data[key],
+            }));
+            setCourses(coursesArray);
+          }
+        });
+
+        // Cleanup subscription on unmount
+        return () => off(coursesRef);
+      }
     };
 
     fetchData();
   }, []);
 
   const addRow = async () => {
-    const newCourse = { name: "", duration: "", institution: "" };
-    const newCourseRef = push(child(ref(database), "Growth"));
-    await update(newCourseRef, newCourse);
-    setCourses([...courses, { ...newCourse, id: newCourseRef.key }]);
+    const newCourse = { name: "", duration: "", institution: "", fileURL: "" };
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+      const newCourseRef = push(
+        child(dbRef(database), `Growth-${decodedEmail}`)
+      );
+      await update(newCourseRef, newCourse);
+      setCourses([...courses, { ...newCourse, id: newCourseRef.key }]);
+    }
   };
 
   const removeRow = async (index) => {
     const courseToDelete = courses[index];
-    await remove(ref(database, `Growth/${courseToDelete.id}`));
-    setCourses(courses.filter((_, i) => i !== index));
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+      await remove(
+        dbRef(database, `Growth-${decodedEmail}/${courseToDelete.id}`)
+      );
+      setCourses(courses.filter((_, i) => i !== index));
+    }
   };
 
   const handleInputChange = async (value, index, field) => {
     const updatedCourses = [...courses];
     updatedCourses[index][field] = value;
     setCourses(updatedCourses);
-    await update(ref(database, `Growth/${updatedCourses[index].id}`), {
-      [field]: value,
-    });
+
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+      await update(
+        dbRef(database, `Growth-${decodedEmail}/${updatedCourses[index].id}`),
+        {
+          [field]: value,
+        }
+      );
+    }
+  };
+
+  const handleFileUpload = async (event, index) => {
+    const file = event.target.files[0];
+    if (file) {
+      setIsUploading(true);
+      const fileRef = storageRef(
+        imgDB,
+        `courses/${courses[index].id}/${file.name}`
+      );
+      await uploadBytes(fileRef, file);
+      const fileURL = await getDownloadURL(fileRef);
+
+      console.log("File available at", fileURL); // Log the download URL
+
+      const updatedCourses = [...courses];
+      updatedCourses[index].fileURL = fileURL;
+      setCourses(updatedCourses);
+      setIsUploading(false);
+      // Not updating the database here; it will be done in saveCourses
+    }
   };
 
   const saveCourses = async () => {
-    const updates = {};
-    courses.forEach((course) => {
-      updates[`Growth/${course.id}`] = course;
-    });
-    await update(ref(database), updates);
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+      const updates = {};
+      courses.forEach((course) => {
+        updates[`Growth-${decodedEmail}/${course.id}`] = course;
+      });
+      await update(dbRef(database), updates);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000); // Hide the success message after 3 seconds
+    }
   };
 
   return (
     <>
-      <div className="border rounded-lg w-full p-10">
-        <div className="relative w-full overflow-auto">
+      <div className="border rounded-lg w-full p-10 bg-white">
+        <div className="relative w-full overflow-auto bg-white">
           <Table>
             <TableHeader>
               <TableRow>
@@ -113,15 +182,25 @@ export default function Technical() {
                     />
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="bg-blue-500 text-white"
-                      // Add any desired edit functionality here
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
+                    {course.fileURL ? (
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="bg-blue-500 text-white"
+                        onClick={() => window.open(course.fileURL, "_blank")}
+                      >
+                        <DownloadIcon className="h-4 w-4" />
+                        <span className="sr-only">Download</span>
+                      </Button>
+                    ) : (
+                      <>
+                        <Input
+                          type="file"
+                          onChange={(e) => handleFileUpload(e, index)}
+                        />
+                        {isUploading && <span>Uploading...</span>}
+                      </>
+                    )}
                     <Button
                       size="icon"
                       variant="outline"
@@ -138,7 +217,7 @@ export default function Technical() {
           </Table>
         </div>
       </div>
-      <div className="flex justify-center mt-4 gap-2">
+      <div className="flex justify-center mt-4 gap-2 bg-white">
         <Button
           variant="outline"
           className="hover:bg-green-500 text-black"
@@ -154,11 +233,16 @@ export default function Technical() {
           Add
         </Button>
       </div>
+      {isSaved && (
+        <div className="flex justify-center mt-4">
+          <span className="text-green-500">Courses saved successfully!</span>
+        </div>
+      )}
     </>
   );
 }
 
-function PencilIcon(props) {
+function DownloadIcon(props) {
   return (
     <svg
       {...props}
@@ -172,8 +256,9 @@ function PencilIcon(props) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-      <path d="m15 5 4 4" />
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
     </svg>
   );
 }

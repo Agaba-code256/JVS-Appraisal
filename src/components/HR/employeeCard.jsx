@@ -1,37 +1,6 @@
-import { AvatarImage, AvatarFallback, Avatar } from "@/components/ui/avatar";
+import { useNavigate } from "react-router-dom";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CardContent, Card } from "@/components/ui/card";
-
-export default function Employeecard() {
-  return (
-    <div className="p-10">
-      <Card className="w-full max-w-sm">
-        <CardContent className="flex items-center gap-4 p-6">
-          <Avatar>
-            <AvatarImage alt="Jane Doe" src="/placeholder-avatar.jpg" />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
-          <div className="space-y-1">
-            <h4 className="text-lg font-semibold">Jane Doe</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Product Designer
-            </p>
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <MailboxIcon className="h-4 w-4" />
-              <span>jane.doe@example.com</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <PhoneIcon className="h-4 w-4" />
-              <span>+1 (555) 123-4567</span>
-            </div>
-          </div>
-          <div className="ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400">
-            <span className="text-sm font-semibold">92%</span>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
 
 function MailboxIcon(props) {
   return (
@@ -73,3 +42,51 @@ function PhoneIcon(props) {
     </svg>
   );
 }
+
+function EmployeeCard({ user }) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/appraisal/${encodeURIComponent(user.email)}`);
+  };
+
+  return (
+    <Card
+      className="w-full max-w-md transform transition-transform duration-300 hover:scale-105 hover:shadow-lg"
+      onClick={handleClick}
+    >
+      <CardContent className="flex items-center gap-4 p-2">
+        <Avatar>
+          <AvatarImage
+            alt={`${user.givenName} ${user.surname}`}
+            src={user.imageUrl || "/placeholder-avatar.jpg"}
+          />
+          <AvatarFallback>{user.givenName[0] + user.surname[0]}</AvatarFallback>
+        </Avatar>
+        <div className="space-y-1">
+          <h4 className="text-lg font-semibold">
+            {user.givenName} {user.surname}
+          </h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {user.personnelType}
+          </p>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <MailboxIcon className="h-4 w-4" />
+            <span>{user.email}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <PhoneIcon className="h-4 w-4" />
+            <span>{user.contact}</span>
+          </div>
+        </div>
+        <div className="ml-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400">
+          <span className="text-sm font-semibold">
+            {parseFloat(user.appraisalScore).toFixed(1)}%
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default EmployeeCard;
