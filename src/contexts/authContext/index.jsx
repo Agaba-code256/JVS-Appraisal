@@ -1,14 +1,14 @@
-import React, { useContext, useEffect, useState } from "react";
-import { auth } from "../../firebase/firebase";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { auth } from "../../firebase/firebase"; // Adjust the import path as needed
 import { onAuthStateChanged } from "firebase/auth";
 
-const AuthContext = React.createContext();
+const AuthContext = createContext();
 
-export function useAuth() {
+export const useAuth = () => {
   return useContext(AuthContext);
-}
+};
 
-export function AuthProvider({ children }) {
+export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +23,6 @@ export function AuthProvider({ children }) {
 
   const value = {
     currentUser,
-    loading,
   };
 
   return (
@@ -31,4 +30,4 @@ export function AuthProvider({ children }) {
       {!loading && children}
     </AuthContext.Provider>
   );
-}
+};

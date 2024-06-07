@@ -61,7 +61,7 @@ export default function AppraisalList() {
             {appraisals.map((appraisal) => (
               <TableRow key={appraisal.id}>
                 <TableCell>{appraisal.email}</TableCell>
-                {appraisal.attributes.map((attribute, index) => (
+                {(appraisal.attributes || []).map((attribute, index) => (
                   <TableCell key={index}>
                     {attribute.performanceLevel || "N/A"}
                   </TableCell>

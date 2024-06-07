@@ -5,27 +5,22 @@ import Layout from "./components/admin/layout";
 import Login from "./components/auth/login";
 import Dashboard from "./components/supervisor/dashboard";
 import Edashboard from "./components/employee/employeeDashboard";
-import AppraisalList from "./components/HR/appraisalList";
-import AppraisalDisplay from "./components/HR/supervisorAppraisal";
-import AppraisalPage from "./components/HR/appraisePage";
-import UploadPdf from "./components/employee/pdfUpload";
-import Pdf from "./components/employee/pdfComponent";
-import Technical from "./components/employee/technical";
 import { AuthProvider } from "./contexts/authContext";
+import EmployeeDetail from "./components/HR/employeeDetail";
+import ProtectedRoutes from "./utils/protectedRoutes";
 
 function App() {
   return (
-    // <div>
-    //   <Technical />
-    // </div>
     <AuthProvider>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/admin" element={<Layout />} />
-        <Route path="/employee/*" element={<Edashboard />} />
-        <Route path="/supervisor" element={<Dashboard />} />
-        <Route path="/HR" element={<Dashboard2 />} />
-        <Route path="/appraisal/:email" element={<AppraisalPage />} />
+        <Route element={<ProtectedRoutes />}>
+          <Route path="/admin/*" element={<Layout />} />
+          <Route path="/employee/*" element={<Edashboard />} />
+          <Route path="/supervisor/*" element={<Dashboard />} />
+          <Route path="/HR/*" element={<Dashboard2 />} />
+          <Route path="/appraisal/:email" element={<EmployeeDetail />} />
+        </Route>
       </Routes>
     </AuthProvider>
   );

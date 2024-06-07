@@ -3,7 +3,7 @@ import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link, Routes, Route, useLocation } from "react-router-dom";
 import logo from "../images/Logo.png";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"; // Import signOut
 import {
   getDatabase,
   ref,
@@ -12,21 +12,20 @@ import {
   equalTo,
   get,
 } from "firebase/database";
-import { jwtDecode } from "jwt-decode";
-import Profile from "./adminProfile"; // Assuming Profile component is in the same folder
-import LandingPage from "./landing";
-import Users from "./Users";
+import Profile from "./HrProfile"; // Assuming Profile component is in the same folder
+import LandingPage from "../admin/landing";
+import EmployeeCardList from "./employeeCardList";
 
 const navigation = [
   { name: "Home", href: "landing" },
-  { name: "Users", href: "users" },
+  { name: "Employees", href: "employees" },
 ];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function ANavbar() {
+export default function HNavbar() {
   const location = useLocation();
   const [activeItem, setActiveItem] = useState(
     location.pathname.split("/").pop()
@@ -35,38 +34,33 @@ export default function ANavbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const idToken = localStorage.getItem("idToken");
-        if (!idToken) {
-          throw new Error("No ID token found in local storage");
-        }
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        user.getIdToken().then((token) => {
+          const database = getDatabase();
+          const usersRef = ref(database, "users");
+          const userQuery = query(
+            usersRef,
+            orderByChild("email"),
+            equalTo(user.email)
+          );
 
-        const decodedToken = jwtDecode(idToken);
-        console.log("Decoded Token:", decodedToken);
-
-        const database = getDatabase();
-        const usersRef = ref(database, "users");
-        const userQuery = query(
-          usersRef,
-          orderByChild("email"),
-          equalTo(decodedToken.email)
-        );
-
-        const snapshot = await get(userQuery);
-
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          setUserProfile(userData[Object.keys(userData)[0]]);
-        } else {
-          console.log("User not found in database");
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
+          get(userQuery)
+            .then((snapshot) => {
+              if (snapshot.exists()) {
+                const userData = snapshot.val();
+                setUserProfile(userData[Object.keys(userData)[0]]);
+              } else {
+                console.log("User not found in database");
+              }
+            })
+            .catch((error) => {
+              console.error("Error querying database:", error);
+            });
+        });
       }
-    };
-
-    fetchUserProfile();
+    });
   }, []);
 
   const handleItemClick = (href) => {
@@ -117,7 +111,7 @@ export default function ANavbar() {
                       {navigation.map((item) => (
                         <Link
                           key={item.name}
-                          to={`/admin/${item.href}`}
+                          to={`/HR/${item.href}`}
                           className={classNames(
                             item.href === activeItem
                               ? "bg-gray-900 text-white"
@@ -133,15 +127,6 @@ export default function ANavbar() {
                   </div>
                 </div>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                  {/* <button
-                    type="button"
-                    className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                  >
-                    <span className="absolute -inset-1.5" />
-                    <span className="sr-only">View notifications</span>
-                    <BellIcon className="h-6 w-6" aria-hidden="true" />
-                  </button> */}
-
                   <Menu as="div" className="relative ml-3">
                     <div>
                       <Menu.Button className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
@@ -208,7 +193,7 @@ export default function ANavbar() {
                   <Disclosure.Button
                     key={item.name}
                     as={Link}
-                    to={`/admin/${item.href}`}
+                    to={`/HR/${item.href}`}
                     className={classNames(
                       item.href === activeItem
                         ? "bg-gray-900 text-white"
@@ -237,7 +222,7 @@ export default function ANavbar() {
       {/* Routes */}
       <Routes>
         <Route path="landing" element={<LandingPage />} />
-        <Route path="users" element={<Users />} />
+        <Route path="employees" element={<EmployeeCardList />} />
       </Routes>
     </div>
   );

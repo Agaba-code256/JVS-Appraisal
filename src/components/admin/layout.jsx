@@ -1,11 +1,14 @@
-import Users from "./Users";
+import React from "react";
+import { Outlet } from "react-router-dom";
 import ANavbar from "./adminNavbar";
 
 const Layout = () => {
   return (
-    <div className="relative bg-white">
+    <div className="bg-white">
       <ANavbar />
-      <Users />
+      <div className="p-4">
+        <Outlet />
+      </div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CardTitle,
   CardDescription,
@@ -8,21 +8,27 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  TooltipTrigger,
-  TooltipContent,
-  Tooltip,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
 import { doCreateUserWithEmailAndPassword } from "@/firebase/auth";
 
-export default function Register() {
-  const [email, setEmail] = useState("");
+export default function Register({ email: propEmail }) {
+  const [email, setEmail] = useState(propEmail || "");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (propEmail) {
+      setEmail(propEmail);
+      generatePassword();
+    }
+  }, [propEmail]);
+
+  useEffect(() => {
+    if (email && password) {
+      handleCreateAccount();
+    }
+  }, [email, password]);
 
   const generatePassword = () => {
     const charset =
@@ -35,14 +41,14 @@ export default function Register() {
     setPassword(generatedPassword);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleCreateAccount = async () => {
     setIsLoading(true);
     setMessage(null);
     setError(null);
     try {
       await doCreateUserWithEmailAndPassword(email, password);
       setMessage("Account created successfully!");
+      console.log(`Email: ${email}, Password: ${password}`);
     } catch (error) {
       setError("Failed to create account: " + error.message);
     } finally {
@@ -56,7 +62,7 @@ export default function Register() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Register</CardTitle>
           <CardDescription>
-            Create user account and fill in user details.
+            Account with the credentials below has been created
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -70,7 +76,7 @@ export default function Register() {
               {error}
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             <div className="flex space-x-2">
               <div className="flex-1">
                 <Label htmlFor="email">Email</Label>
@@ -82,6 +88,7 @@ export default function Register() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full focus:ring-2 focus:ring-green-500"
+                  disabled
                 />
               </div>
               <div className="flex-1">
@@ -94,62 +101,14 @@ export default function Register() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full focus:ring-2 focus:ring-green-500"
+                    disabled
                   />
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          className="h-9 w-9"
-                          size="icon"
-                          variant="ghost"
-                          type="button"
-                          onClick={generatePassword}
-                        >
-                          <KeyIcon className="h-5 w-5" />
-                          <span className="sr-only">Generate password</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Generate a secure password</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <Button
-                className="w-full bg-gray-800"
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading ? "Creating Account..." : "Create Account"}
-              </Button>
-            </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function KeyIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="7.5" cy="15.5" r="5.5" />
-      <path d="m21 2-9.6 9.6" />
-      <path d="m15.5 7.5 3 3L22 7l-3-3" />
-    </svg>
   );
 }

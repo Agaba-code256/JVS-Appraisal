@@ -6,11 +6,13 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   updatePassword,
+  getAuth,
 } from "firebase/auth";
 import { auth } from "./firebase";
 
 export const doCreateUserWithEmailAndPassword = async (email, password) => {
-  return createUserWithEmailAndPassword(auth, email, password);
+  const auth = getAuth();
+  await createUserWithEmailAndPassword(auth, email, password);
 };
 
 export const doSignInWithEmailAndPassword = (email, password) => {
@@ -20,13 +22,14 @@ export const doSignInWithEmailAndPassword = (email, password) => {
 export const doSignInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   const result = await signInWithPopup(auth, provider);
-
   return result;
 };
 
 export const doSignOut = () => {
   return auth.signOut();
 };
+
+// Other functions for password reset, email verification, etc.
 
 // export const doPasswordReset = (email) => {
 //   return sendPasswordResetEmail(auth, email);

@@ -1,13 +1,14 @@
-import ANavbar from "../admin/adminNavbar";
-import Navbar from "../navbar";
-import Employeecard from "./employeeCard";
-import EmployeeCardList from "./employeeCardList";
+import React from "react";
+import { Outlet } from "react-router-dom";
+import HNavbar from "./HrNavbar";
 
 const Dashboard2 = () => {
   return (
-    <div>
-      <ANavbar />
-      <EmployeeCardList />
+    <div className="bg-white">
+      <HNavbar />
+      <div className="p-4">
+        <Outlet />
+      </div>
     </div>
   );
 };

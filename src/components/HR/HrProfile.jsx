@@ -54,11 +54,19 @@ export default function Profile({ onClose }) {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (!userProfile) {
-    return <div>User profile not found</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        User profile not found
+      </div>
+    );
   }
 
   const {
@@ -76,8 +84,8 @@ export default function Profile({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-3xl">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-lg mx-4 sm:mx-auto">
         <button
           className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
           onClick={closeModal}
@@ -86,7 +94,7 @@ export default function Profile({ onClose }) {
         </button>
         <h2 className="text-2xl font-bold mb-4">Profile</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-6">
-          <div className="col-span-2 flex items-center justify-center">
+          <div className="col-span-1 sm:col-span-2 flex items-center justify-center">
             <Avatar className="h-32 w-32">
               <AvatarImage src={imageUrl} alt="Profile" />
               <AvatarFallback></AvatarFallback>

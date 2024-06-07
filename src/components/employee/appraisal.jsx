@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { database } from "../../firebase/firebase"; // Adjust the import path as needed
-import { ref, push, set } from "firebase/database";
+import { ref, push, set, get } from "firebase/database";
 import { auth } from "../../firebase/firebase";
 
 const attributes = [
@@ -44,6 +44,15 @@ const attributes = [
 
 export default function Appraisal({ initialEmail = "", onSubmit }) {
   const [email, setEmail] = useState(initialEmail);
+  const [isSubmitted, setIsSubmitted] = useState(false); // State to check if the form is already submitted
+  const [selectedValues, setSelectedValues] = useState(
+    attributes.map(() => null)
+  );
+  const [comments, setComments] = useState("");
+  const [currentQuarter, setCurrentQuarter] = useState(
+    calculateCurrentQuarter()
+  );
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const fetchEmail = async () => {
@@ -62,10 +71,28 @@ export default function Appraisal({ initialEmail = "", onSubmit }) {
     fetchEmail();
   }, []);
 
-  const [selectedValues, setSelectedValues] = useState(
-    attributes.map(() => null)
-  );
-  const [comments, setComments] = useState("");
+  useEffect(() => {
+    const checkExistingAppraisal = async () => {
+      const sanitizedEmail = sanitizeEmail(email);
+      const quarterString = `${currentQuarter} quarter`;
+      const encodedQuarterString = encodeURIComponent(quarterString);
+      const appraisalRef = ref(
+        database,
+        `EmployeeAppraisal/${encodedQuarterString}-${sanitizedEmail}`
+      );
+
+      try {
+        const snapshot = await get(appraisalRef);
+        if (snapshot.exists()) {
+          setIsSubmitted(true); // If data exists, set the form as submitted
+        }
+      } catch (error) {
+        console.error("Error checking existing appraisal:", error);
+      }
+    };
+
+    checkExistingAppraisal();
+  }, [email, currentQuarter]);
 
   const handleRadioChange = (index, value) => {
     setSelectedValues((prevValues) => {
@@ -89,8 +116,19 @@ export default function Appraisal({ initialEmail = "", onSubmit }) {
     setOverallValue(calculateOverallValue());
   }, [selectedValues]);
 
+  const sanitizeEmail = (email) => {
+    return email.replace(/[.#$[\]]/g, "_");
+  };
+
   const handleSubmit = () => {
-    const supervisorAppraisalRef = ref(database, "EmployeeAppraisal");
+    const sanitizedEmail = sanitizeEmail(email);
+    const quarterString = `${currentQuarter} quarter`; // Construct quarter string
+    const encodedQuarterString = encodeURIComponent(quarterString);
+
+    const supervisorAppraisalRef = ref(
+      database,
+      `EmployeeAppraisal/${encodedQuarterString}-${sanitizedEmail}`
+    );
     const newDataRef = push(supervisorAppraisalRef);
 
     const dataToSave = {
@@ -107,12 +145,30 @@ export default function Appraisal({ initialEmail = "", onSubmit }) {
     set(newDataRef, dataToSave)
       .then(() => {
         console.log("Data saved successfully!");
+        setSuccessMessage("Data saved successfully!");
         onSubmit(email);
       })
       .catch((error) => {
         console.error("Error saving data:", error);
       });
   };
+
+  // Function to determine the current quarter (implementation depends on your needs)
+  function calculateCurrentQuarter() {
+    const today = new Date();
+    const month = today.getMonth(); // 0-indexed
+
+    switch (true) {
+      case month < 3:
+        return 1; // Q1 (January - March)
+      case month < 6:
+        return 2; // Q2 (April - June)
+      case month < 9:
+        return 3; // Q3 (July - September)
+      default:
+        return 4; // Q4 (October - December)
+    }
+  }
 
   return (
     <div className="border rounded-lg w-full p-10 bg-white">
@@ -161,6 +217,7 @@ export default function Appraisal({ initialEmail = "", onSubmit }) {
                           className="text-green-500"
                           checked={selectedValues[index] === value}
                           onChange={() => handleRadioChange(index, value)}
+                          disabled={isSubmitted}
                         />
                         <Label htmlFor={`durability-${index}-${value}`}>
                           {value}
@@ -183,6 +240,7 @@ export default function Appraisal({ initialEmail = "", onSubmit }) {
             placeholder="Enter your comments (Give work-related example)"
             value={comments}
             onChange={(e) => setComments(e.target.value)}
+            disabled={isSubmitted}
           />
         </div>
         <div className="flex justify-end mt-4">
@@ -190,10 +248,22 @@ export default function Appraisal({ initialEmail = "", onSubmit }) {
           <span className="ml-2 text-lg font-bold">{overallValue}</span>
         </div>
         <div className="flex justify-end mt-4">
-          <Button className="bg-green-500 text-white" onClick={handleSubmit}>
+          <Button
+            className="bg-green-500 text-white"
+            onClick={handleSubmit}
+            disabled={isSubmitted}
+          >
             Submit
           </Button>
         </div>
+        {isSubmitted && (
+          <div className="mt-4 text-red-500 font-bold">
+            This employee has already been appraised for this quarter.
+          </div>
+        )}
+        {successMessage && (
+          <div className="mt-4 text-green-500 font-bold">{successMessage}</div>
+        )}
       </div>
     </div>
   );

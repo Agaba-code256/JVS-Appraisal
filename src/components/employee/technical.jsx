@@ -24,6 +24,16 @@ import {
 import { push, child } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
+const encodeEmail = (email) =>
+  email.replace(
+    /[@.]/g,
+    (char) =>
+      ({
+        "@": "_at_",
+        ".": "_dot_",
+      }[char])
+  );
+
 export default function Technical() {
   const [courses, setCourses] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -35,8 +45,8 @@ export default function Technical() {
       const currentUser = auth.currentUser;
 
       if (currentUser) {
-        const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
-        const coursesRef = dbRef(database, `Growth-${decodedEmail}`);
+        const encodedEmail = encodeEmail(currentUser.email);
+        const coursesRef = dbRef(database, `Growth-${encodedEmail}`);
         onValue(coursesRef, (snapshot) => {
           const data = snapshot.val();
           if (data) {
@@ -62,9 +72,9 @@ export default function Technical() {
     const currentUser = auth.currentUser;
 
     if (currentUser) {
-      const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+      const encodedEmail = encodeEmail(currentUser.email);
       const newCourseRef = push(
-        child(dbRef(database), `Growth-${decodedEmail}`)
+        child(dbRef(database), `Growth-${encodedEmail}`)
       );
       await update(newCourseRef, newCourse);
       setCourses([...courses, { ...newCourse, id: newCourseRef.key }]);
@@ -77,9 +87,9 @@ export default function Technical() {
     const currentUser = auth.currentUser;
 
     if (currentUser) {
-      const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+      const encodedEmail = encodeEmail(currentUser.email);
       await remove(
-        dbRef(database, `Growth-${decodedEmail}/${courseToDelete.id}`)
+        dbRef(database, `Growth-${encodedEmail}/${courseToDelete.id}`)
       );
       setCourses(courses.filter((_, i) => i !== index));
     }
@@ -94,9 +104,9 @@ export default function Technical() {
     const currentUser = auth.currentUser;
 
     if (currentUser) {
-      const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+      const encodedEmail = encodeEmail(currentUser.email);
       await update(
-        dbRef(database, `Growth-${decodedEmail}/${updatedCourses[index].id}`),
+        dbRef(database, `Growth-${encodedEmail}/${updatedCourses[index].id}`),
         {
           [field]: value,
         }
@@ -130,11 +140,15 @@ export default function Technical() {
     const currentUser = auth.currentUser;
 
     if (currentUser) {
-      const decodedEmail = currentUser.email.replace(/[.#$/[\]]/g, "_");
+      const encodedEmail = encodeEmail(currentUser.email);
       const updates = {};
       courses.forEach((course) => {
-        updates[`Growth-${decodedEmail}/${course.id}`] = course;
+        updates[`Growth-${encodedEmail}/${course.id}`] = course;
       });
+      console.log(
+        "Saving courses to database with path:",
+        `Growth-${encodedEmail}`
+      ); // Log the path
       await update(dbRef(database), updates);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000); // Hide the success message after 3 seconds
@@ -145,43 +159,54 @@ export default function Technical() {
     <>
       <div className="border rounded-lg w-full p-10 bg-white">
         <div className="relative w-full overflow-auto bg-white">
-          <Table>
+          <Table className="min-w-full divide-y divide-gray-200">
             <TableHeader>
               <TableRow>
-                <TableHead>Course</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Institution</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Course
+                </TableHead>
+                <TableHead className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Duration
+                </TableHead>
+                <TableHead className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Institution
+                </TableHead>
+                <TableHead className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="bg-white divide-y divide-gray-200">
               {courses.map((course, index) => (
-                <TableRow key={course.id}>
-                  <TableCell>
+                <TableRow key={course.id} className="bg-white">
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     <Input
                       value={course.name}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "name")
                       }
+                      className="w-full"
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <Input
                       value={course.duration}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "duration")
                       }
+                      className="w-full"
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <Input
                       value={course.institution}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "institution")
                       }
+                      className="w-full"
                     />
                   </TableCell>
-                  <TableCell className="flex items-center gap-2">
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center gap-2">
                     {course.fileURL ? (
                       <Button
                         size="icon"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { database, ref, onValue, off } from "../../firebase/firebase";
+import { database, ref, onValue, off, get } from "../../firebase/firebase";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CardContent, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -101,7 +101,7 @@ export default function ContactCardList() {
 
     const fetchData = async () => {
       try {
-        onValue(usersRef, (snapshot) => {
+        onValue(usersRef, async (snapshot) => {
           const usersData = snapshot.val();
           if (usersData) {
             const usersArray = Object.keys(usersData)
@@ -110,7 +110,35 @@ export default function ContactCardList() {
                 ...usersData[key],
               }))
               .filter((user) => user.personnelType === "employee"); // Filter users based on personnelType
-            setUsers(usersArray);
+
+            // Check if each user has been appraised
+            const updatedUsers = await Promise.all(
+              usersArray.map(async (user) => {
+                const sanitizedEmail = sanitizeEmail(user.email);
+                const quarterString = `${calculateCurrentQuarter()} quarter`;
+                const encodedQuarterString = encodeURIComponent(quarterString);
+                const appraisalRef = ref(
+                  database,
+                  `SupervisorAppraisal/${encodedQuarterString}-${sanitizedEmail}`
+                );
+
+                try {
+                  const snapshot = await get(appraisalRef);
+                  return {
+                    ...user,
+                    appraised: snapshot.exists(), // Set the appraised flag
+                  };
+                } catch (error) {
+                  console.error("Error checking existing appraisal:", error);
+                  return {
+                    ...user,
+                    appraised: false,
+                  };
+                }
+              })
+            );
+
+            setUsers(updatedUsers);
           } else {
             setUsers([]);
           }
@@ -126,6 +154,26 @@ export default function ContactCardList() {
       off(usersRef);
     };
   }, []);
+
+  const sanitizeEmail = (email) => {
+    return email.replace(/[.#$[\]]/g, "_");
+  };
+
+  const calculateCurrentQuarter = () => {
+    const today = new Date();
+    const month = today.getMonth(); // 0-indexed
+
+    switch (true) {
+      case month < 3:
+        return 1; // Q1 (January - March)
+      case month < 6:
+        return 2; // Q2 (April - June)
+      case month < 9:
+        return 3; // Q3 (July - September)
+      default:
+        return 4; // Q4 (October - December)
+    }
+  };
 
   const handleAppraiseClick = (email) => {
     setSelectedEmail(email);

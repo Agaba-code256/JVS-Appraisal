@@ -26,30 +26,48 @@ export default function EmployeeCardList() {
               (user) => user.personnelType === "employee"
             );
 
-            onValue(employeeAppraisalsRef, (snapshot) => {
-              const employeeAppraisalsData = snapshot.val();
-              onValue(supervisorAppraisalsRef, (snapshot) => {
-                const supervisorAppraisalsData = snapshot.val();
+            onValue(employeeAppraisalsRef, (employeeSnapshot) => {
+              const employeeAppraisalsData = employeeSnapshot.val();
+
+              onValue(supervisorAppraisalsRef, (supervisorSnapshot) => {
+                const supervisorAppraisalsData = supervisorSnapshot.val();
+
                 const combinedData = filteredUsers.map((user) => {
-                  const employeeAppraisal = employeeAppraisalsData
-                    ? Object.values(employeeAppraisalsData).find(
+                  let employeeOverallValue = 0;
+                  let supervisorOverallValue = 0;
+
+                  // Iterate over each quarter in EmployeeAppraisal
+                  if (employeeAppraisalsData) {
+                    for (const quarterKey in employeeAppraisalsData) {
+                      const quarterData = employeeAppraisalsData[quarterKey];
+                      const employeeAppraisal = Object.values(quarterData).find(
                         (appraisal) => appraisal.email === user.email
-                      )
-                    : null;
-                  const supervisorAppraisal = supervisorAppraisalsData
-                    ? Object.values(supervisorAppraisalsData).find(
-                        (appraisal) => appraisal.email === user.email
-                      )
-                    : null;
-                  const employeeOverallValue = employeeAppraisal
-                    ? parseFloat(employeeAppraisal.overallValue) || 0
-                    : 0;
-                  const supervisorOverallValue = supervisorAppraisal
-                    ? parseFloat(supervisorAppraisal.overallValue) || 0
-                    : 0;
+                      );
+                      if (employeeAppraisal) {
+                        employeeOverallValue +=
+                          parseFloat(employeeAppraisal.overallValue) || 0;
+                      }
+                    }
+                  }
+
+                  // Iterate over each quarter in SupervisorAppraisal
+                  if (supervisorAppraisalsData) {
+                    for (const quarterKey in supervisorAppraisalsData) {
+                      const quarterData = supervisorAppraisalsData[quarterKey];
+                      const supervisorAppraisal = Object.values(
+                        quarterData
+                      ).find((appraisal) => appraisal.email === user.email);
+                      if (supervisorAppraisal) {
+                        supervisorOverallValue +=
+                          parseFloat(supervisorAppraisal.overallValue) || 0;
+                      }
+                    }
+                  }
+
                   const totalAppraisalScore = (
                     employeeOverallValue + supervisorOverallValue
                   ).toFixed(1);
+
                   return {
                     ...user,
                     appraisalScore: totalAppraisalScore,

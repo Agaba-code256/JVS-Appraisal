@@ -11,13 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { database } from "../../firebase/firebase"; // Adjust the import path as needed
-import { ref, push, set } from "firebase/database";
+import { ref, push, set, get } from "firebase/database";
 
 const attributes = [
   {
     title: "Honesty and Integrity",
     description:
-      "Displays and builds the highest standards of ethical and moral conduct in order to promote confidence and trust in Public Service, communicates values to others, monitors own actions for consistency with values and beliefs, does not divulge confidential information to un authorized people, is open and honest and provides quality service without need for inducements.",
+      "Displays and builds the highest standards of ethical and moral conduct in order to promote confidence and trust in Public Service, communicates values to others, monitors own actions for consistency with values and beliefs, does not divulge confidential information to unauthorized people, is open and honest and provides quality service without need for inducements.",
   },
   {
     title: "Professionalism",
@@ -32,7 +32,7 @@ const attributes = [
   {
     title: "Customer Service",
     description:
-      "Treats all customers with respect, responds to customer needs within agreed time frames, addresses customer concerns and problem situations with patience and tact. ",
+      "Treats all customers with respect, responds to customer needs within agreed time frames, addresses customer concerns and problem situations with patience and tact.",
   },
   {
     title: "Interpersonal / Social Skills",
@@ -42,22 +42,22 @@ const attributes = [
   {
     title: "Communication",
     description:
-      "Actively listens and speaks respectfully, exchanges information in a clear manner, expresses self clearly both orally   and in writing, able to present issues in a convincing manner.",
+      "Actively listens and speaks respectfully, exchanges information in a clear manner, expresses self clearly both orally and in writing, able to present issues in a convincing manner.",
   },
   {
-    title: "Creativity  and innovation",
+    title: "Creativity and Innovation",
     description:
       "Provides practical solutions to problems, makes useful suggestions for improvements, forward thinking, keen to seek and grasp new opportunities and ideas.",
   },
   {
-    title: "Time Management ",
+    title: "Time Management",
     description:
       "Adheres to schedules; Is effective in setting priorities; manages time well, completes work assignment on time.",
   },
   {
-    title: "People management and Empathy ",
+    title: "People Management and Empathy",
     description:
-      "Manages and respects diversity, respects  divergent views irrespective of the source, engages  others to develop commitment, appreciates  other’s efforts and puts self in the position of others.",
+      "Manages and respects diversity, respects divergent views irrespective of the source, engages others to develop commitment, appreciates other’s efforts and puts self in the position of others.",
   },
   {
     title: "Leadership",
@@ -65,7 +65,7 @@ const attributes = [
       "Keeps people informed, models and encourages personal accountability, develops others, champions new ideas, reinforces and communicates a compelling vision for change.",
   },
   {
-    title: "Team work",
+    title: "Team Work",
     description:
       "Works cooperatively and collaboratively; builds strong teams, shares resources and develops processes to improve the efficiency of the team, listens and respects others and does his/her share of work.",
   },
@@ -79,6 +79,34 @@ export default function TestTable({ email, onSubmit }) {
     attributes.map(() => "") // Initialize with empty strings for each attribute
   );
   const [comments, setComments] = useState(""); // State for comments
+  const [currentQuarter, setCurrentQuarter] = useState(
+    calculateCurrentQuarter()
+  );
+  const [isSubmitted, setIsSubmitted] = useState(false); // State to check if the form is already submitted
+  const [successMessage, setSuccessMessage] = useState(""); // State for success message
+
+  useEffect(() => {
+    const checkExistingAppraisal = async () => {
+      const sanitizedEmail = sanitizeEmail(email);
+      const quarterString = `${currentQuarter} quarter`;
+      const encodedQuarterString = encodeURIComponent(quarterString);
+      const appraisalRef = ref(
+        database,
+        `SupervisorAppraisal/${encodedQuarterString}-${sanitizedEmail}`
+      );
+
+      try {
+        const snapshot = await get(appraisalRef);
+        if (snapshot.exists()) {
+          setIsSubmitted(true); // If data exists, set the form as submitted
+        }
+      } catch (error) {
+        console.error("Error checking existing appraisal:", error);
+      }
+    };
+
+    checkExistingAppraisal();
+  }, [email, currentQuarter]);
 
   const handleRadioChange = (index, value) => {
     setSelectedValues((prevValues) => {
@@ -104,37 +132,71 @@ export default function TestTable({ email, onSubmit }) {
     return overallValue.toFixed(2); // Format to two decimal places
   };
 
-  const [overallValue, setOverallValue] = useState(calculateOverallValue);
+  const [overallValue, setOverallValue] = useState(calculateOverallValue());
 
   useEffect(() => {
     setOverallValue(calculateOverallValue());
   }, [selectedValues]);
 
-  const handleSubmit = () => {
-    const supervisorAppraisalRef = ref(database, "SupervisorAppraisal");
-    const newDataRef = push(supervisorAppraisalRef);
-
-    const dataToSave = {
-      email, // Include email in the data to be saved
-      attributes: attributes.map((attribute, index) => ({
-        title: attribute.title,
-        description: attribute.description,
-        performanceLevel: selectedValues[index],
-        improvementPlan: improvementPlans[index],
-      })),
-      overallValue: calculateOverallValue(),
-      comments, // Include comments in the data to be saved
-    };
-
-    set(newDataRef, dataToSave)
-      .then(() => {
-        console.log("Data saved successfully!");
-        onSubmit(email); // Notify parent component of submission
-      })
-      .catch((error) => {
-        console.error("Error saving data:", error);
-      });
+  const sanitizeEmail = (email) => {
+    return email.replace(/[.#$[\]]/g, "_");
   };
+
+  const handleSubmit = async () => {
+    const sanitizedEmail = sanitizeEmail(email);
+    const quarterString = `${currentQuarter} quarter`; // Construct quarter string
+
+    try {
+      const encodedQuarterString = encodeURIComponent(quarterString);
+      const supervisorAppraisalRef = ref(
+        database,
+        `SupervisorAppraisal/${encodedQuarterString}-${sanitizedEmail}`
+      );
+      const newDataRef = push(supervisorAppraisalRef);
+
+      const dataToSave = {
+        email,
+        attributes: attributes.map((attribute, index) => ({
+          title: attribute.title,
+          description: attribute.description,
+          performanceLevel: selectedValues[index],
+          improvementPlan: improvementPlans[index],
+        })),
+        overallValue: calculateOverallValue(),
+        comments,
+      };
+
+      await set(newDataRef, dataToSave)
+        .then(() => {
+          console.log("Data saved successfully!");
+          onSubmit(email); // Notify parent component of submission
+          setSuccessMessage("Data submitted successfully!"); // Set success message
+        })
+        .catch((error) => {
+          console.error("Error saving data:", error);
+        });
+    } catch (error) {
+      console.error("Error creating path:", error);
+      // Handle the error (e.g., display an error message to the user)
+    }
+  };
+
+  // Function to determine the current quarter (implementation depends on your needs)
+  function calculateCurrentQuarter() {
+    const today = new Date();
+    const month = today.getMonth(); // 0-indexed
+
+    switch (true) {
+      case month < 3:
+        return 1; // Q1 (January - March)
+      case month < 6:
+        return 2; // Q2 (April - June)
+      case month < 9:
+        return 3; // Q3 (July - September)
+      default:
+        return 4; // Q4 (October - December)
+    }
+  }
 
   return (
     <div className="border rounded-lg w-full p-10">
@@ -164,14 +226,15 @@ export default function TestTable({ email, onSubmit }) {
                       >
                         <input
                           type="radio"
-                          id={`durability-${index}-${value}`}
-                          name={`durability-${index}`}
+                          id={`performance-${index}-${value}`}
+                          name={`performance-${index}`}
                           value={value.toString()}
                           className="text-green-500"
                           checked={selectedValues[index] === value}
                           onChange={() => handleRadioChange(index, value)}
+                          disabled={isSubmitted}
                         />
-                        <Label htmlFor={`durability-${index}-${value}`}>
+                        <Label htmlFor={`performance-${index}-${value}`}>
                           {value}
                         </Label>
                       </div>
@@ -186,6 +249,7 @@ export default function TestTable({ email, onSubmit }) {
                     onChange={(e) =>
                       handleImprovementPlanChange(index, e.target.value)
                     }
+                    disabled={isSubmitted}
                   />
                 </TableCell>
               </TableRow>
@@ -202,6 +266,7 @@ export default function TestTable({ email, onSubmit }) {
             placeholder="Enter your comments and recommendations"
             value={comments}
             onChange={(e) => setComments(e.target.value)}
+            disabled={isSubmitted}
           />
         </div>
         <div className="flex justify-end mt-4">
@@ -209,10 +274,22 @@ export default function TestTable({ email, onSubmit }) {
           <span className="ml-2 text-lg font-bold">{overallValue}</span>
         </div>
         <div className="flex justify-end mt-4">
-          <Button className="bg-green-500 text-white" onClick={handleSubmit}>
+          <Button
+            className="bg-green-500 text-white"
+            onClick={handleSubmit}
+            disabled={isSubmitted}
+          >
             Submit
           </Button>
         </div>
+        {isSubmitted && (
+          <div className="mt-4 text-red-500 font-bold">
+            This employee has already been appraised for this quarter.
+          </div>
+        )}
+        {successMessage && (
+          <div className="mt-4 text-green-500 font-bold">{successMessage}</div>
+        )}
       </div>
     </div>
   );

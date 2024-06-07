@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/select";
 import { AvatarImage, AvatarFallback, Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { database, auth } from "../../firebase/firebase"; // Adjust the import path as needed
+import { database, auth } from "../../../firebase/firebase"; // Adjust the import path as needed
 import { ref, set, onValue, off } from "firebase/database";
+import { encodeEmail } from "../../../utils"; // Adjust the import path as needed
 
 export default function PersonalData() {
   const [formData, setFormData] = useState({
@@ -36,7 +37,6 @@ export default function PersonalData() {
       try {
         const user = auth.currentUser;
         if (user) {
-          const idToken = await user.getIdToken();
           const decodedEmail = user.email;
           setFormData((prevData) => ({
             ...prevData,
@@ -93,7 +93,8 @@ export default function PersonalData() {
     setAlert({ type: "", message: "" });
 
     try {
-      const newEmployeeRef = ref(database, "personnelData/" + formData.surname);
+      const encodedEmail = encodeEmail(formData.email);
+      const newEmployeeRef = ref(database, "personnelData/" + encodedEmail);
       await set(newEmployeeRef, formData);
       setLoading(false);
       setAlert({ type: "success", message: "Data saved successfully!" });

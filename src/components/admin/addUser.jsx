@@ -3,6 +3,7 @@ import { ref, getDownloadURL, uploadBytes } from "firebase/storage";
 import { ref as dbRef, set } from "firebase/database";
 import { v4 } from "uuid";
 import { imgDB, database } from "../../firebase/firebase"; // Adjust the import path as needed
+import { doCreateUserWithEmailAndPassword } from "@/firebase/auth";
 import placeholder from "../images/placeholder.png";
 
 export default function Adduser() {
@@ -16,6 +17,8 @@ export default function Adduser() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -38,7 +41,30 @@ export default function Adduser() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const generatePassword = () => {
+    const charset =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+    let generatedPassword = "";
+    for (let i = 0; i < 12; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      generatedPassword += charset[randomIndex];
+    }
+    return generatedPassword;
+  };
+
+  const handleCreateAccount = async (email, password) => {
+    setMessage(null);
+    setError(null);
+    try {
+      await doCreateUserWithEmailAndPassword(email, password);
+      setMessage("Account created successfully!");
+      console.log(`Email: ${email}, Password: ${password}`);
+    } catch (error) {
+      setError("Failed to create account: " + error.message);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (
       surname &&
@@ -51,41 +77,49 @@ export default function Adduser() {
     ) {
       setSubmitting(true);
       const userId = v4();
-      set(dbRef(database, `users/${userId}`), {
-        surname,
-        givenName,
-        contact,
-        email,
-        personnelType,
-        salary,
-        imageUrl: imgURL,
-      })
-        .then(() => {
-          console.log("Data saved successfully!");
-          // Reset form
-          setSurname("");
-          setGivenName("");
-          setContact("");
-          setEmail("");
-          setPersonnelType("");
-          setSalary("");
-          setImgURL("");
-          setFile(null);
-          setSubmitting(false);
-          // Refresh the page
-          window.location.reload();
-        })
-        .catch((error) => {
-          console.error("Error saving data: ", error);
-          setSubmitting(false);
+      const password = generatePassword(); // Generate password
+
+      try {
+        await set(dbRef(database, `users/${userId}`), {
+          surname,
+          givenName,
+          contact,
+          email,
+          personnelType,
+          salary,
+          imageUrl: imgURL,
         });
+        console.log("Data saved successfully!");
+
+        // Create account
+        await handleCreateAccount(email, password);
+
+        // Reset form
+        setSurname("");
+        setGivenName("");
+        setContact("");
+        setEmail("");
+        setPersonnelType("");
+        setSalary("");
+        setImgURL("");
+        setFile(null);
+
+        setMessage("User added successfully!");
+      } catch (error) {
+        console.error("Error saving data: ", error);
+        setError("Failed to add user: " + error.message);
+      } finally {
+        setSubmitting(false);
+        // Refresh the page
+        window.location.reload();
+      }
     } else {
       alert("Please fill out all fields and upload an image.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white-100 ">
+    <div className="flex items-center justify-center min-h-screen bg-white-100">
       <div className="border-none w-[700px] bg-white">
         <div className="p-6">
           <div className="mb-4">
@@ -251,6 +285,16 @@ export default function Adduser() {
               </button>
             </div>
           </form>
+          {message && (
+            <div className="mb-4 text-green-500 bg-green-100 p-2 rounded">
+              {message}
+            </div>
+          )}
+          {error && (
+            <div className="mb-4 text-red-500 bg-red-100 p-2 rounded">
+              {error}
+            </div>
+          )}
         </div>
       </div>
     </div>

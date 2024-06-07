@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CardContent, Card } from "@/components/ui/card";
+import { encodeEmail } from "../../utils"; // Import the utility function
 
 function MailboxIcon(props) {
   return (
@@ -47,7 +48,8 @@ function EmployeeCard({ user }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/appraisal/${encodeURIComponent(user.email)}`);
+    const encodedEmail = encodeEmail(user.email);
+    navigate(`/appraisal/${encodedEmail}`);
   };
 
   return (

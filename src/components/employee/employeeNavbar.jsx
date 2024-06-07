@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link, Routes, Route, useLocation } from "react-router-dom";
 import logo from "../images/Logo.png";
 import Appraisal from "./appraisal";
 import Performance from "./performance";
 import Technical from "./technical";
-import PersonalData from "./personalData";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import PersonalData from "./personalData/personalData";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"; // Import signOut
 import {
   getDatabase,
   ref,
@@ -17,8 +17,12 @@ import {
   get,
 } from "firebase/database";
 import Profile from "./employeeProfile"; // Assuming Profile component is in the same folder
+import PersonalDataDisplay from "./personalData/personalDataDisplay";
+import PersonalDataControl from "./personalData/personalControl";
+import LandingPage from "./landing";
 
 const navigation = [
+  { name: "Home", href: "landing" },
   { name: "Personal Data", href: "personaldata" },
   { name: "Growth", href: "growth" },
   { name: "Appraisal", href: "appraisal" },
@@ -75,6 +79,17 @@ export default function ENavbar() {
     setIsProfileOpen(!isProfileOpen);
   };
 
+  const handleSignOut = () => {
+    const auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        window.location.href = "/"; // Adjust the redirection as needed
+      })
+      .catch((error) => {
+        console.error("Error signing out:", error);
+      });
+  };
+
   return (
     <div>
       <Disclosure as="nav" className="bg-gray-800">
@@ -118,15 +133,6 @@ export default function ENavbar() {
                   </div>
                 </div>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                  <button
-                    type="button"
-                    className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                  >
-                    <span className="absolute -inset-1.5" />
-                    <span className="sr-only">View notifications</span>
-                    <BellIcon className="h-6 w-6" aria-hidden="true" />
-                  </button>
-
                   <Menu as="div" className="relative ml-3">
                     <div>
                       <Menu.Button className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
@@ -174,19 +180,7 @@ export default function ENavbar() {
                                 active ? "bg-gray-100" : "",
                                 "block px-4 py-2 text-sm text-gray-700"
                               )}
-                            >
-                              Settings
-                            </a>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <a
-                              href="#"
-                              className={classNames(
-                                active ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm text-gray-700"
-                              )}
+                              onClick={handleSignOut}
                             >
                               Sign out
                             </a>
@@ -226,14 +220,15 @@ export default function ENavbar() {
 
       {/* Profile modal */}
       {isProfileOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
           <Profile onClose={toggleProfileModal} />
         </div>
       )}
 
       {/* Routes */}
       <Routes>
-        <Route path="personaldata" element={<PersonalData />} />
+        <Route path="landing" element={<LandingPage />} />
+        <Route path="personaldata" element={<PersonalDataControl />} />
         <Route path="growth" element={<Technical />} />
         <Route path="appraisal" element={<Appraisal />} />
         <Route path="performance" element={<Performance />} />
