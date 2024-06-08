@@ -104,7 +104,7 @@ export default function PersonalDataDisplay() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl py-12 px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-2xl py-12 px-4 sm:px-6 lg:px-8 bg-white">
       <h2 className="text-2xl font-semibold mb-6">Personal Data</h2>
       <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
         <div>

@@ -171,7 +171,7 @@ export default function Appraisal({ initialEmail = "", onSubmit }) {
   }
 
   return (
-    <div className="border rounded-lg w-full p-10 bg-white">
+    <div className="border rounded-lg w-full max-w-3xl mx-auto p-10 bg-white">
       <div className="mb-4">
         <Label htmlFor="email" className="block mb-2 font-bold">
           Email

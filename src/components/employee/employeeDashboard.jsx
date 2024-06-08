@@ -6,7 +6,9 @@ export default function Edashboard() {
   return (
     <div className="bg-white">
       <ENavbar />
-      <div className="p-4">
+      <div className="p-4 mt-8">
+        {" "}
+        {/* Add margin-top here */}
         <Outlet />
       </div>
     </div>

@@ -141,7 +141,7 @@ export default function Performance() {
   }
 
   return (
-    <div className="border rounded-lg w-full p-10 bg-white">
+    <div className="border rounded-lg w-full max-w-3xl mx-auto p-10 bg-white">
       <h2 className="text-xl font-semibold mb-4">Performance Overview</h2>
       {Object.keys(appraisalsByQuarter).length === 0 ? (
         <div className="text-gray-500">No appraisals found.</div>
@@ -175,7 +175,9 @@ export default function Performance() {
             </div>
             {salary !== null && (
               <div className="flex justify-end mt-2">
-                <span className="text-gray-500 font-bold">Your bonus is:</span>
+                <span className="text-gray-500 font-bold">
+                  Your bonus is: shs.
+                </span>
                 <span className="ml-2 text-lg font-bold">
                   {calculateBonus(
                     calculateTotalMarkForQuarter(appraisalsByQuarter[quarter])

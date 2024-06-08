@@ -157,7 +157,7 @@ export default function Technical() {
 
   return (
     <>
-      <div className="border rounded-lg w-full p-10 bg-white">
+      <div className="border rounded-lg w-full max-w-3xl mx-auto p-10 pt-8 bg-white">
         <div className="relative w-full overflow-auto bg-white">
           <Table className="min-w-full divide-y divide-gray-200">
             <TableHeader>

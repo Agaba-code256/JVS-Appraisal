@@ -118,7 +118,6 @@ export default function AddUser() {
       contact &&
       email &&
       personnelType &&
-      supervisor &&
       salary &&
       imgURL
     ) {
@@ -133,7 +132,7 @@ export default function AddUser() {
           contact,
           email,
           personnelType,
-          supervisor, // Store supervisor email
+          supervisor: supervisor || "", // Save an empty string if no supervisor
           salary,
           imageUrl: imgURL,
         });
@@ -254,8 +253,7 @@ export default function AddUser() {
                     id="personnelType"
                     value={personnelType}
                     onChange={(e) => setPersonnelType(e.target.value)}
-                    className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-
-500 focus:border-green-500"
+                    className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                   >
                     <option value="" disabled>
                       Select personnel type
@@ -266,29 +264,31 @@ export default function AddUser() {
                     <option value="administrator">Administrator</option>
                   </select>
                 </div>
-                <div className="flex flex-col space-y-1.5">
-                  <label
-                    htmlFor="supervisor"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Select Supervisor
-                  </label>
-                  <select
-                    id="supervisor"
-                    value={supervisor}
-                    onChange={(e) => setSupervisor(e.target.value)}
-                    className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  >
-                    <option value="" disabled>
-                      Select supervisor
-                    </option>
-                    {supervisors.map((supervisor) => (
-                      <option key={supervisor.id} value={supervisor.email}>
-                        {supervisor.surname} {supervisor.givenName}
+                {personnelType === "employee" && (
+                  <div className="flex flex-col space-y-1.5">
+                    <label
+                      htmlFor="supervisor"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Select Supervisor
+                    </label>
+                    <select
+                      id="supervisor"
+                      value={supervisor}
+                      onChange={(e) => setSupervisor(e.target.value)}
+                      className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    >
+                      <option value="" disabled>
+                        Select supervisor
                       </option>
-                    ))}
-                  </select>
-                </div>
+                      {supervisors.map((supervisor) => (
+                        <option key={supervisor.id} value={supervisor.email}>
+                          {supervisor.surname} {supervisor.givenName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col space-y-1.5">
                 <label

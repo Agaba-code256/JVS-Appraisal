@@ -199,7 +199,7 @@ export default function TestTable({ email, onSubmit }) {
   }
 
   return (
-    <div className="border rounded-lg w-full p-10">
+    <div className="border rounded-lg w-full p-10 bg-white">
       <div className="relative w-full overflow-auto">
         <Table>
           <TableHeader>
