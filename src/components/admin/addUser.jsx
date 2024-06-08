@@ -1,17 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ref, getDownloadURL, uploadBytes } from "firebase/storage";
-import { ref as dbRef, set } from "firebase/database";
+import { ref as dbRef, set, onValue, off } from "firebase/database";
 import { v4 } from "uuid";
 import { imgDB, database } from "../../firebase/firebase"; // Adjust the import path as needed
 import { doCreateUserWithEmailAndPassword } from "@/firebase/auth";
+import emailjs from "@emailjs/browser"; // Import EmailJS
 import placeholder from "../images/placeholder.png";
 
-export default function Adduser() {
+export default function AddUser() {
   const [surname, setSurname] = useState("");
   const [givenName, setGivenName] = useState("");
   const [contact, setContact] = useState("");
   const [email, setEmail] = useState("");
   const [personnelType, setPersonnelType] = useState("");
+  const [supervisor, setSupervisor] = useState("");
   const [salary, setSalary] = useState("");
   const [imgURL, setImgURL] = useState("");
   const [file, setFile] = useState(null);
@@ -19,6 +21,26 @@ export default function Adduser() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [supervisors, setSupervisors] = useState([]);
+
+  useEffect(() => {
+    const fetchSupervisors = () => {
+      const usersRef = dbRef(database, "users");
+      onValue(usersRef, (snapshot) => {
+        const users = snapshot.val();
+        if (users) {
+          const supervisorUsers = Object.entries(users)
+            .filter(([id, user]) => user.personnelType === "supervisor")
+            .map(([id, user]) => ({ id, ...user }));
+          setSupervisors(supervisorUsers);
+        }
+      });
+      return () => {
+        off(usersRef);
+      };
+    };
+    fetchSupervisors();
+  }, []);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -29,8 +51,8 @@ export default function Adduser() {
       uploadBytes(imgRef, selectedFile)
         .then((snapshot) => {
           getDownloadURL(snapshot.ref).then((url) => {
+            console.log("Image URL:", url); // Log the image URL
             setImgURL(url);
-            console.log("File URL:", url);
             setUploading(false);
           });
         })
@@ -58,10 +80,34 @@ export default function Adduser() {
     try {
       await doCreateUserWithEmailAndPassword(email, password);
       setMessage("Account created successfully!");
-      console.log(`Email: ${email}, Password: ${password}`);
     } catch (error) {
       setError("Failed to create account: " + error.message);
     }
+  };
+
+  const sendEmail = (toName, email, password) => {
+    console.log("Preparing to send email to:", email); // Debug log
+    const serviceId = "service_pqdsnoa";
+    const templateId = "template_l9ngyij";
+    const publicKey = "MOoZOgjpIZ_L-69CR";
+
+    const templateParams = {
+      from_name: "OAG",
+      to_name: toName,
+      user_email: email,
+      user_password: password,
+      to_email: email,
+    };
+
+    emailjs
+      .send(serviceId, templateId, templateParams, publicKey)
+      .then((response) => {
+        console.log("Email sent successfully!", response);
+        window.location.reload();
+      })
+      .catch((error) => {
+        console.error("Error sending email:", error);
+      });
   };
 
   const handleSubmit = async (e) => {
@@ -72,6 +118,7 @@ export default function Adduser() {
       contact &&
       email &&
       personnelType &&
+      supervisor &&
       salary &&
       imgURL
     ) {
@@ -86,13 +133,13 @@ export default function Adduser() {
           contact,
           email,
           personnelType,
+          supervisor, // Store supervisor email
           salary,
           imageUrl: imgURL,
         });
-        console.log("Data saved successfully!");
-
-        // Create account
         await handleCreateAccount(email, password);
+
+        sendEmail(`${surname} ${givenName}`, email, password); // Send email
 
         // Reset form
         setSurname("");
@@ -103,15 +150,15 @@ export default function Adduser() {
         setSalary("");
         setImgURL("");
         setFile(null);
+        setSupervisor("");
 
         setMessage("User added successfully!");
       } catch (error) {
-        console.error("Error saving data: ", error);
         setError("Failed to add user: " + error.message);
       } finally {
         setSubmitting(false);
         // Refresh the page
-        window.location.reload();
+        // window.location.reload();
       }
     } else {
       alert("Please fill out all fields and upload an image.");
@@ -180,13 +227,13 @@ export default function Adduser() {
                 </div>
                 <div className="flex flex-col space-y-1.5">
                   <label
-                    htmlFor="Email"
+                    htmlFor="email"
                     className="text-sm font-medium text-gray-700"
                   >
                     Email
                   </label>
                   <input
-                    id="Email"
+                    id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
@@ -207,7 +254,8 @@ export default function Adduser() {
                     id="personnelType"
                     value={personnelType}
                     onChange={(e) => setPersonnelType(e.target.value)}
-                    className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-
+500 focus:border-green-500"
                   >
                     <option value="" disabled>
                       Select personnel type
@@ -220,19 +268,42 @@ export default function Adduser() {
                 </div>
                 <div className="flex flex-col space-y-1.5">
                   <label
-                    htmlFor="salary"
+                    htmlFor="supervisor"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Salary
+                    Select Supervisor
                   </label>
-                  <input
-                    id="salary"
-                    value={salary}
-                    onChange={(e) => setSalary(e.target.value)}
-                    placeholder="Enter personnel salary"
+                  <select
+                    id="supervisor"
+                    value={supervisor}
+                    onChange={(e) => setSupervisor(e.target.value)}
                     className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  />
+                  >
+                    <option value="" disabled>
+                      Select supervisor
+                    </option>
+                    {supervisors.map((supervisor) => (
+                      <option key={supervisor.id} value={supervisor.email}>
+                        {supervisor.surname} {supervisor.givenName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <label
+                  htmlFor="salary"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Salary
+                </label>
+                <input
+                  id="salary"
+                  value={salary}
+                  onChange={(e) => setSalary(e.target.value)}
+                  placeholder="Enter the salary"
+                  className="border border-gray-300 p-2 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                />
               </div>
               <div className="flex flex-col space-y-1.5">
                 <label
@@ -263,14 +334,8 @@ export default function Adduser() {
               <button
                 type="button"
                 onClick={() => {
-                  // Reset form
-                  setSurname("");
-                  setGivenName("");
-                  setContact("");
-                  setEmail("");
-                  setPersonnelType("");
-                  setImgURL("");
-                  setFile(null);
+                  // Refresh the page
+                  window.location.reload();
                 }}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition"
               >

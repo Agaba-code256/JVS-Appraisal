@@ -86,7 +86,7 @@ export default function Profile({ onClose }) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-lg mx-4 sm:mx-auto">
+      <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-lg mx-4 sm:mx-auto h-full sm:h-auto">
         <button
           className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
           onClick={closeModal}
@@ -94,7 +94,7 @@ export default function Profile({ onClose }) {
           <XIcon className="h-6 w-6" />
         </button>
         <h2 className="text-2xl font-bold mb-4">Profile</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-6 overflow-y-auto h-full sm:h-auto">
           <div className="col-span-1 sm:col-span-2 flex items-center justify-center">
             <Avatar className="h-32 w-32">
               <AvatarImage src={imageUrl} alt="Profile" />

@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  SelectValue,
-  SelectTrigger,
-  SelectItem,
-  SelectContent,
-  Select,
-} from "@/components/ui/select";
-import { AvatarImage, AvatarFallback, Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { database, auth } from "../../../firebase/firebase"; // Adjust the import path as needed
 import { ref, set, onValue, off } from "firebase/database";
@@ -24,13 +16,11 @@ export default function PersonalData() {
     presentAppointmentDate: "",
     directorate: "",
     department: "",
-    appraisalPeriod: "",
-    supervisor: "",
+    appraisalPeriod: "Quarterly",
   });
 
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState({ type: "", message: "" });
-  const [supervisors, setSupervisors] = useState([]);
 
   useEffect(() => {
     const fetchEmail = async () => {
@@ -48,39 +38,11 @@ export default function PersonalData() {
       }
     };
 
-    const fetchSupervisors = () => {
-      const usersRef = ref(database, "users");
-      onValue(usersRef, (snapshot) => {
-        const users = snapshot.val();
-        if (users) {
-          const supervisorUsers = Object.entries(users)
-            .filter(([id, user]) => user.personnelType === "supervisor")
-            .map(([id, user]) => ({ id, ...user }));
-          console.log("Supervisors fetched:", supervisorUsers); // Debugging line
-          setSupervisors(supervisorUsers);
-        }
-      });
-    };
-
     fetchEmail();
-    fetchSupervisors();
-
-    return () => {
-      const usersRef = ref(database, "users");
-      off(usersRef);
-    };
   }, []);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [id]: value,
-    }));
-  };
-
-  const handleSelectChange = (id, value) => {
-    console.log(`Selected supervisor ID: ${value}`); // Debugging line
     setFormData((prevData) => ({
       ...prevData,
       [id]: value,
@@ -207,44 +169,13 @@ export default function PersonalData() {
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="appraisalPeriod">Appraisal Period</Label>
-            <Input
-              id="appraisalPeriod"
-              placeholder="Enter appraisal period"
-              value={formData.appraisalPeriod}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="supervisor">Select Supervisor</Label>
-            <Select
-              id="supervisor"
-              onValueChange={(value) => handleSelectChange("supervisor", value)}
-              value={formData.supervisor}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select supervisor" />
-              </SelectTrigger>
-              <SelectContent>
-                {supervisors.map((supervisor) => (
-                  <SelectItem key={supervisor.id} value={supervisor.id}>
-                    <div className="flex items-center gap-2">
-                      <Avatar>
-                        <AvatarImage
-                          alt={`${supervisor.surname} ${supervisor.givenName}`}
-                          src={supervisor.imageUrl}
-                        />
-                        <AvatarFallback>{supervisor.surname[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>{`${supervisor.surname} ${supervisor.givenName}`}</div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="appraisalPeriod">Appraisal Period</Label>
+          <Input
+            id="appraisalPeriod"
+            value={formData.appraisalPeriod}
+            disabled
+          />
         </div>
         <div className="flex justify-end">
           <Button type="submit">

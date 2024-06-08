@@ -8,6 +8,9 @@ import {
   remove,
   update,
   get,
+  equalTo,
+  query,
+  orderByChild,
 } from "firebase/database";
 import {
   getStorage,
@@ -40,7 +43,10 @@ export {
   ref,
   onValue,
   off,
+  equalTo,
   remove,
+  query,
+  orderByChild,
   get,
   update,
   uploadBytes,

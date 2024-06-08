@@ -8,9 +8,13 @@ import Edashboard from "./components/employee/employeeDashboard";
 import { AuthProvider } from "./contexts/authContext";
 import EmployeeDetail from "./components/HR/employeeDetail";
 import ProtectedRoutes from "./utils/protectedRoutes";
+import EmailForm from "./components/admin/email";
 
 function App() {
   return (
+    // <div>
+    //   <EmailForm />
+    // </div>
     <AuthProvider>
       <Routes>
         <Route path="/" element={<Login />} />

@@ -14,6 +14,7 @@ import {
 } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/Logo.png";
+import image1 from "../images/image1.jpg"; // Ensure this path is correct
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -97,11 +98,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="mx-auto max-w-sm space-y-6">
+    <div
+      className="min-h-screen flex items-center justify-center bg-cover bg-center"
+      style={{ backgroundImage: `url(${image1})` }}
+    >
+      <div className="bg-white bg-opacity-80 p-6 rounded-lg shadow-md max-w-sm w-full mx-auto">
         <div className="space-y-2 text-center">
           <img src={logo} alt="Logo" className="mx-auto h-12 w-24" />
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-700">
             Enter your email below to login to your account
           </p>
         </div>

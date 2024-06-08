@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { database, ref, onValue, off, get } from "../../firebase/firebase";
+import { getAuth } from "firebase/auth";
+import {
+  database,
+  ref,
+  onValue,
+  off,
+  get,
+  query,
+  orderByChild,
+  equalTo,
+} from "../../firebase/firebase";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CardContent, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,22 +104,51 @@ function ContactCard({ user, onAppraiseClick }) {
 
 export default function ContactCardList() {
   const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [selectedEmail, setSelectedEmail] = useState(null);
 
   useEffect(() => {
-    const usersRef = ref(database, "users");
+    const fetchCurrentUser = async () => {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        try {
+          const token = await currentUser.getIdToken();
+          console.log("User ID Token:", token);
+
+          const userQuery = query(
+            ref(database, "users"),
+            orderByChild("email"),
+            equalTo(currentUser.email)
+          );
+
+          const snapshot = await get(userQuery);
+          if (snapshot.exists()) {
+            setCurrentUser(snapshot.val()[Object.keys(snapshot.val())[0]]);
+          }
+        } catch (error) {
+          console.error("Error fetching current user profile:", error);
+        }
+      }
+    };
 
     const fetchData = async () => {
       try {
+        const usersRef = ref(database, "users");
         onValue(usersRef, async (snapshot) => {
           const usersData = snapshot.val();
-          if (usersData) {
+          if (usersData && currentUser) {
             const usersArray = Object.keys(usersData)
               .map((key) => ({
                 id: key,
                 ...usersData[key],
               }))
-              .filter((user) => user.personnelType === "employee"); // Filter users based on personnelType
+              .filter(
+                (user) =>
+                  user.personnelType === "employee" &&
+                  user.supervisor === currentUser.email
+              );
 
             // Check if each user has been appraised
             const updatedUsers = await Promise.all(
@@ -148,12 +187,13 @@ export default function ContactCardList() {
       }
     };
 
+    fetchCurrentUser();
     fetchData();
 
     return () => {
-      off(usersRef);
+      off(ref(database, "users"));
     };
-  }, []);
+  }, [currentUser]);
 
   const sanitizeEmail = (email) => {
     return email.replace(/[.#$[\]]/g, "_");
