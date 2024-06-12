@@ -20,13 +20,13 @@ import {
 } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBPd9bKjRquGlgOySns3xN7L7EtzI3kJDU",
-  authDomain: "appraisal-7de11.firebaseapp.com",
-  databaseURL: "https://appraisal-7de11-default-rtdb.firebaseio.com/",
-  projectId: "appraisal-7de11",
-  storageBucket: "appraisal-7de11.appspot.com",
-  messagingSenderId: "575098408176",
-  appId: "1:575098408176:web:e9978286e7c756730f0635",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
